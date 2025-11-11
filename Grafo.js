@@ -23,7 +23,7 @@ class Grafo {
     // Retorna as arestas do grafo
     toString() {
         return Array.from(this.adj.entries())
-            .map(([n, neis]) => `${n} -> ${neis.map(x => `${x.to}${x.peso !== 1 ? `(${x.weight})` : ''}`).join(', ')}`)
+            .map(([n, neis]) => `${n} -> ${neis.map(x => `${x.to}${x.peso !== 1 ? `(${x.peso})` : ''}`).join(', ')}`)
             .join('\n');
     }
 }
