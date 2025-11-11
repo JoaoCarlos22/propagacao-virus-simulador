@@ -1,0 +1,5 @@
+# grafo simples
+A B
+B C 2.5
+C A
+D E 10

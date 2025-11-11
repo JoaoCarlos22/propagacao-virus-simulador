@@ -1,7 +1,9 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { buildGrafoFromText } from './arquivoService.js';
-require('dotenv').config();
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const arquivo = process.env.PATH_ARQUIVO;
 if (!arquivo) {
