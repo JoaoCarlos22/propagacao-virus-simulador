@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { buildGrafoFromText } from './arquivoService.js';
+import { buildGrafoFromText } from './src/arquivoService.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

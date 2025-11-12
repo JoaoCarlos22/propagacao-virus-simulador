@@ -1,4 +1,4 @@
-import Grafo from './Grafo.js';
+import Grafo from './models/Grafo.js';
 
 function converterLinhaAresta(linha) {
     // Remover comentários
