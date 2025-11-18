@@ -53,6 +53,7 @@ class Grafo {
             for (const aresta of infoAtual.arestas) {
                 const vizinho = aresta.to;
                 if (!infectados.has(vizinho)) {
+                    this.adj.get(vizinho).infectado = true;
                     // somatorio simples: pega o tempo atribuido ao peso e adiciona ao total
                     tempoTotal += this.tempoPorNivel(aresta.peso);
                     infectados.add(vizinho);
