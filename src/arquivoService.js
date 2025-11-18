@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import Grafo from './models/Grafo.js';
 
 // Coletar topologia e número de dispositivos do texto
@@ -46,7 +48,7 @@ function converterLinhaAresta(linha) {
 }
 
 // Construir grafo a partir de texto
-export function buildGrafoFromText(text) {
+function buildGrafoFromText(text) {
     const linhas = text.split(/\r?\n/); // Suporta quebras de linha Unix e Windows
     const { topologia, numDispositivos } = extrairInfo(linhas);
     const grafo = new Grafo(topologia, numDispositivos);
@@ -56,4 +58,13 @@ export function buildGrafoFromText(text) {
         grafo.addAresta(aresta.u, aresta.v, aresta.peso);
     }
     return grafo;
+}
+
+export function carregarGrafo(pathArquivo) {
+    const full = resolve(pathArquivo);
+    const content = readFileSync(full, 'utf8');
+    const grafo = buildGrafoFromText(content);
+
+    console.log('\nGrafo carregado:\n');
+    console.log(grafo.toString());
 }
