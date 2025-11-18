@@ -8,6 +8,7 @@ function extrairInfo(linhas) {
     let numDispositivos = 0;
     let dispositivoInfectado = null;
 
+    // 
     for (const linha of linhas) {
         const l = linha.trim();
         if (l.startsWith('# Topologia de Rede:')) {
@@ -64,11 +65,16 @@ function buildGrafoFromText(text) {
     return grafo;
 }
 
+function exibirGrafo(grafo)  {
+    console.log('\nGrafo carregado:\n');
+    console.log(grafo.toString());
+    console.log(grafo.tempoContagio());
+}
+
 export function carregarGrafo(pathArquivo) {
     const full = resolve(pathArquivo);
     const content = readFileSync(full, 'utf8');
     const grafo = buildGrafoFromText(content);
 
-    console.log('\nGrafo carregado:\n');
-    console.log(grafo.toString());
+    exibirGrafo(grafo);
 }
