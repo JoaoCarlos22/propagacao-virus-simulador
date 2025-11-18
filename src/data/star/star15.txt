@@ -1,0 +1,19 @@
+# Topologia de Rede: Estrela
+# Número de vértices: 15
+# Dispositivo infectado: H
+# origem | destino | nivel de segurança
+A	B	3
+A	C	8
+A	D	5
+A	E	1
+A	F	9
+A	G	4
+A	H	2
+A	I	7
+A	J	6
+A	K	5
+A	L	8
+A	M	2
+A	N	7
+A	O	3
+A	P	6
