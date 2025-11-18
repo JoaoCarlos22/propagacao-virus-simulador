@@ -1,5 +1,23 @@
 import Grafo from './models/Grafo.js';
 
+// Coletar topologia e número de dispositivos do texto
+function extrairInfo(linhas) {
+    let topologia = 'indefinida';
+    let numDispositivos = 0;
+
+    for (const linha of linhas) {
+        const l = linha.trim();
+        if (l.startsWith('# Topologia de Rede:')) {
+            topologia = l.split(':')[1].trim();
+        }
+        if (l.startsWith('# Número de vértices:')) {
+            numDispositivos = parseInt(l.split(':')[1].trim(), 10);
+        }
+    }
+
+    return { topologia, numDispositivos };
+}
+
 function converterLinhaAresta(linha) {
     // Remover comentários
     const semComentario = linha.split('#', 1)[0].trim();
@@ -29,8 +47,9 @@ function converterLinhaAresta(linha) {
 
 // Construir grafo a partir de texto
 export function buildGrafoFromText(text) {
-    const grafo = new Grafo();
     const linhas = text.split(/\r?\n/); // Suporta quebras de linha Unix e Windows
+    const { topologia, numDispositivos } = extrairInfo(linhas);
+    const grafo = new Grafo(topologia, numDispositivos);
     for (const linha of linhas) {
         const aresta = converterLinhaAresta(linha);
         if (!aresta) continue;
