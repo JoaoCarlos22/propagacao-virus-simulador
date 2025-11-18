@@ -1,0 +1,9 @@
+# Topologia de Rede: Anel
+# Número de vértices: 6
+# origem | destino | nivel de segurança
+A	B	4
+B	C	6
+C	D	2
+D	E	7
+E	F	1
+F	A	10

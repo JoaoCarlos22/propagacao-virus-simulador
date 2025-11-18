@@ -1,0 +1,18 @@
+# Topologia de Rede: Malha
+# Número de vértices: 6
+# origem | destino | nivel de segurança
+A	B	9
+A	C	5
+A	D	1
+A	E	7
+A	F	3
+B	C	9
+B	D	8
+B	E	10
+B	F	1
+C	D	2
+C	E	6
+C	F	4
+D	E	8
+D	F	5
+E	F	10
