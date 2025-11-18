@@ -1,5 +1,6 @@
 # Topologia de Rede: Estrela
 # Número de vértices: 6
+# Dispositivo infectado: E
 # origem | destino | nivel de segurança
 A	B	3
 A	C	8

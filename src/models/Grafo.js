@@ -1,14 +1,17 @@
 class Grafo {
-    constructor(topologia, numDispositivos) {
-        // Mapa de adjacência: vértice (dispositivo) -> { arestas: [{to, peso (nível de segurança)}] }
+    constructor(topologia, numDispositivos, dispInfectado) {
+        // Mapa de adjacência: vértice (dispositivo) -> { arestas: [{to, peso (nível de segurança)}], infectado: boolean }
         this.adj = new Map();
         this.topologia = topologia || 'indefinida';
         this.numDispositivos = numDispositivos || 0;
+        this.dispositivoInfectado = dispInfectado || null;
     }
 
     // Garantir que um vértice exista na lista de adjacência
     _validar(vertice) {
-        if (!this.adj.has(vertice)) this.adj.set(vertice, { arestas: [] });
+        // verificar se o vértice é o vértice infectado
+        const infectado = vertice === this.dispositivoInfectado;
+        if (!this.adj.has(vertice)) this.adj.set(vertice, { arestas: [], infectado });
     }
 
     addAresta(u, v, peso) {
@@ -27,6 +30,7 @@ class Grafo {
         const topo = [];
         if (this.topologia) topo.push(`Topologia: ${this.topologia}`);
         topo.push(`Quantidade de dispositivos: ${this.numDispositivos ?? this.vertices().length}`);
+        if (this.dispositivoInfectado) topo.push(`Dispositivo infectado: ${this.dispositivoInfectado}`);
         const corpo = Array.from(this.adj.entries())
             .map(([n, info]) => {
                 const arestas = info.arestas.map(x => `${x.to}${x.peso !== 0 ? `(seg=${x.peso})` : ''}`).join(', ');

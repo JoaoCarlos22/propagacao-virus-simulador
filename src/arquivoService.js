@@ -6,6 +6,7 @@ import Grafo from './models/Grafo.js';
 function extrairInfo(linhas) {
     let topologia = 'indefinida';
     let numDispositivos = 0;
+    let dispositivoInfectado = null;
 
     for (const linha of linhas) {
         const l = linha.trim();
@@ -15,9 +16,12 @@ function extrairInfo(linhas) {
         if (l.startsWith('# Número de vértices:')) {
             numDispositivos = parseInt(l.split(':')[1].trim(), 10);
         }
+        if (l.startsWith('# Dispositivo infectado:')) {
+            dispositivoInfectado = l.split(':')[1].trim();
+        }
     }
 
-    return { topologia, numDispositivos };
+    return { topologia, numDispositivos, dispositivoInfectado };
 }
 
 function converterLinhaAresta(linha) {
@@ -50,8 +54,8 @@ function converterLinhaAresta(linha) {
 // Construir grafo a partir de texto
 function buildGrafoFromText(text) {
     const linhas = text.split(/\r?\n/); // Suporta quebras de linha Unix e Windows
-    const { topologia, numDispositivos } = extrairInfo(linhas);
-    const grafo = new Grafo(topologia, numDispositivos);
+    const { topologia, numDispositivos, dispositivoInfectado } = extrairInfo(linhas);
+    const grafo = new Grafo(topologia, numDispositivos, dispositivoInfectado);
     for (const linha of linhas) {
         const aresta = converterLinhaAresta(linha);
         if (!aresta) continue;

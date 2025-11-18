@@ -1,5 +1,6 @@
 # Topologia de Rede: Anel
 # Número de vértices: 6
+# Dispositivo infectado: D
 # origem | destino | nivel de segurança
 A	B	4
 B	C	6
