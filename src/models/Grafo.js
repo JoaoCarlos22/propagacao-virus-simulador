@@ -35,47 +35,73 @@ class Grafo {
         return Array.from(this.adj.keys());
     }
 
-    buscaLargura() {
+    // calcula o tempo de infeccao para cada dispositivo usando Dijkstra
+    calcularTemposInfeccao() {
+        const tempos = {};
         const infectados = new Set();
         const fila = [];
-        let tempoTotal = 0;
 
-        // Iniciar a busca a partir do dispositivo infectado
-        if (this.dispositivoInfectado && this.adj.has(this.dispositivoInfectado)) {
-            fila.push(this.dispositivoInfectado);
-            infectados.add(this.dispositivoInfectado);
+        // Inicializa todos os tempos como infinito, exceto o infectado inicial
+        for (const v of this.vertices()) {
+            tempos[v] = Infinity;
         }
+        tempos[this.dispositivoInfectado] = 0;
+        fila.push({ vertice: this.dispositivoInfectado, tempo: 0 });
 
         while (fila.length > 0) {
-            const atual = fila.shift();
-            const infoAtual = this.adj.get(atual);
+            // Seleciona o nó com menor tempo acumulado
+            fila.sort((a, b) => a.tempo - b.tempo);
+            const { vertice: atual, tempo: tempoAtual } = fila.shift();
+            if (infectados.has(atual)) continue;
+            infectados.add(atual);
 
-            for (const aresta of infoAtual.arestas) {
+            // Atualiza os tempos dos vizinhos
+            for (const aresta of this.adj.get(atual).arestas) {
+                // Calcula o tempo acumulado para o vizinho
                 const vizinho = aresta.to;
-                if (!infectados.has(vizinho)) {
-                    this.adj.get(vizinho).infectado = true;
-                    // somatorio simples: pega o tempo atribuido ao peso e adiciona ao total
-                    tempoTotal += this.tempoPorNivel(aresta.peso);
-                    infectados.add(vizinho);
-                    fila.push(vizinho);
+                const tempoNovo = tempoAtual + this.tempoPorNivel(aresta.peso);
+
+                // Se o novo tempo for menor, atualiza e adiciona à fila
+                if (tempoNovo < tempos[vizinho]) {
+                    tempos[vizinho] = tempoNovo;
+                    fila.push({ vertice: vizinho, tempo: tempoNovo });
                 }
             }
         }
 
-        return tempoTotal;
+        // retorna os tempos de cada dispositivo infectado
+        return Object.values(tempos);
     }
 
-    // exibe o tempo total de contágio
-    tempoContagio() {
-        const horas = this.buscaLargura();
-        const dias = Math.floor(horas / 24);
-        const horasRestantes = horas % 24;
-        let resultado = "\nTempo de contágio total: ";
-        if (dias > 0) {
-            resultado += dias + " dias ";
-        }
-        resultado += horasRestantes + " horas.";
-        return resultado;
+    // calcula o tempo medio total de infeccao
+    calcularMediaTempo() {
+        const tempos = this.calcularTemposInfeccao();
+        const somaTempos = tempos.reduce((acc, val) => acc + val, 0);
+        return somaTempos / this.numDispositivos;
+    }
+
+    // calcula o tempo minimo total de infeccao
+    calcularMinimoTempo() {
+        const tempos = this.calcularTemposInfeccao();
+        return Math.max(...tempos);
+    }
+
+    // exibe o tempo total e minimo de contágio
+    exibirTempoContagio() {
+        const horasTotais = this.calcularMinimoTempo();
+        const horaMedia = this.calcularMediaTempo();
+
+        const formatHoras = (horas) => {
+            if (horas === Infinity || Number.isNaN(horas)) return 'infinito';
+            const dias = Math.floor(horas / 24);
+            const horasRestantes = Math.floor(horas % 24);
+            let partes = [];
+            if (dias > 0) partes.push(`${dias} dias`);
+            partes.push(`${horasRestantes} horas`);
+            return partes.join(' ');
+        };
+
+        return `\nTempo médio de contágio: ${formatHoras(horaMedia)}\nTempo total de contágio: ${formatHoras(horasTotais)}.`;
     }
 
     // Representação em string do grafo

@@ -68,7 +68,7 @@ function buildGrafoFromText(text) {
 function exibirGrafo(grafo)  {
     console.log('\nGrafo carregado:\n');
     console.log(grafo.toString());
-    console.log(grafo.tempoContagio());
+    console.log(grafo.exibirTempoContagio());
 }
 
 export function carregarGrafo(pathArquivo) {
