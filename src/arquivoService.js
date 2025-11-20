@@ -6,23 +6,33 @@ import Grafo from './models/Grafo.js';
 function extrairInfo(linhas) {
     let topologia = 'indefinida';
     let numDispositivos = 0;
-    let dispositivoInfectado = null;
+    const dispositivosInfectados = [];
 
-    // 
     for (const linha of linhas) {
         const l = linha.trim();
         if (l.startsWith('# Topologia de Rede:')) {
             topologia = l.split(':')[1].trim();
+            continue;
         }
         if (l.startsWith('# Número de vértices:')) {
-            numDispositivos = parseInt(l.split(':')[1].trim(), 10);
+            numDispositivos = parseInt(l.split(':')[1].trim(), 10) || 0;
+            continue;
         }
-        if (l.startsWith('# Dispositivo infectado:')) {
-            dispositivoInfectado = l.split(':')[1].trim();
+        if (l.startsWith('# Dispositivo infectado:') || l.startsWith('# Dispositivos infectados:')) {
+            let rhs = (l.split(':')[1] || '').trim();
+            // Remover comentários inline, se houver
+            rhs = rhs.split('#', 1)[0].trim();
+            if (!rhs) continue;
+            // Aceita separadores vírgula, ponto-e-vírgula ou espaços
+            const parts = rhs.split(/[,;]\s*|\s+/).filter(Boolean);
+            dispositivosInfectados.push(...parts);
         }
     }
 
-    return { topologia, numDispositivos, dispositivoInfectado };
+    // Remover duplicatas preservando ordem
+    const únicos = Array.from(new Set(dispositivosInfectados));
+
+    return { topologia, numDispositivos, dispositivosInfectados: únicos };
 }
 
 function converterLinhaAresta(linha) {
@@ -55,8 +65,8 @@ function converterLinhaAresta(linha) {
 // Construir grafo a partir de texto
 function buildGrafoFromText(text) {
     const linhas = text.split(/\r?\n/); // Suporta quebras de linha Unix e Windows
-    const { topologia, numDispositivos, dispositivoInfectado } = extrairInfo(linhas);
-    const grafo = new Grafo(topologia, numDispositivos, dispositivoInfectado);
+    const { topologia, numDispositivos, dispositivosInfectados } = extrairInfo(linhas);
+    const grafo = new Grafo(topologia, numDispositivos, dispositivosInfectados);
     for (const linha of linhas) {
         const aresta = converterLinhaAresta(linha);
         if (!aresta) continue;

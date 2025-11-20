@@ -103,11 +103,19 @@ export async function menu2(rl) {
         Number(numVertices) > 30) {
         numVertices = (await prompt(rl, 'Digite a quantidade de vértices (entre 5 e 30): ')).trim();
     }
+
+    // ler a quantidade de vértices infectados
+    let numInfectados = '';
+    while (isNaN(numInfectados) ||
+        Number(numInfectados) < 1 ||
+        Number(numInfectados) >= Number(numVertices)) {
+        numInfectados = (await prompt(rl, `Digite a quantidade de vértices infectados (entre 1 e ${Number(numVertices) - 1}): `)).trim();
+    }
     
     // gerar a instância
     console.log('\nGerando nova instância com Gemini, aguarde...');
     const topologia = opcao.label.toLowerCase();
-    await gerarInstancia(topologia, Number(numVertices));
+    await gerarInstancia(topologia, Number(numVertices), Number(numInfectados));
 
     return {
         key: opcao.key,

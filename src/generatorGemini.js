@@ -5,22 +5,29 @@ const API_KEY = process.env.GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-// função para gerar um dispositivo infectado aleatório
-function gerarDispoInfectado(numVertices) {
+// função para gerar os dispositivos infectados aleatórios
+function gerarDispoInfectado(numVertices, numInfectados) {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const index = Math.floor(Math.random() * Math.min(numVertices, letters.length));
-    return letters[index];
+    let infectados = [];
+    while (infectados.length < numInfectados) {
+        const index = Math.floor(Math.random() * Math.min(numVertices, letters.length));
+        const letra = letters[index];
+        if (!infectados.includes(letra)) {
+            infectados.push(letra);
+        }
+    }
+    return infectados.join(', ');
 }
 
 // função para gerar o grafo usando Gemini
-export async function gerarGrafoGemini({ topologia, numVertices }) {
+export async function gerarGrafoGemini({ topologia, numVertices, numInfectados }) {
     try {
-        const infectado = gerarDispoInfectado(numVertices);
+        const infectados = gerarDispoInfectado(numVertices, numInfectados);
         const prompt = `
             Gere um grafo no seguinte formato:
             # Topologia de Rede: ${topologia}
             # Número de vértices: ${numVertices}
-            # Dispositivo infectado: ${infectado}
+            # Dispositivos infectados: ${infectados}
             # origem | destino | nivel de segurança
             (Use letras para os dispositivos, níveis de segurança de 1 a 10, e siga o padrão dos exemplos abaixo.)
 
