@@ -15,9 +15,9 @@ function prompt(rl, pergunta) {
 // retorna o path do arquivo baseado na topologia e quantidade de vertices
 function getPath(topologia, qtd) {
     const base = 'src/data';
-    if (topologia === '1') return `${base}/star/star${qtd}.txt`;
-    if (topologia === '2') return `${base}/ring/ring${qtd}.txt`;
-    if (topologia === '3') return `${base}/mesh/mesh${qtd}.txt`;
+    if (topologia === '1') return `${base}/estrela/estrela${qtd}.txt`;
+    if (topologia === '2') return `${base}/anel/anel${qtd}.txt`;
+    if (topologia === '3') return `${base}/malha/malha${qtd}.txt`;
     return null;
 }
 
