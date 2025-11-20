@@ -70,6 +70,7 @@ function exibirGrafo(grafo)  {
     console.log(grafo.toString());
     console.log(grafo.exibirTempoContagio());
     console.log(grafo.exibirSequenciaInfeccao());
+    console.log(grafo.exibirDispositivosVulneraveis());
 }
 
 export function carregarGrafo(pathArquivo) {

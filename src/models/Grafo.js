@@ -35,6 +35,48 @@ class Grafo {
         return Array.from(this.adj.keys());
     }
 
+    // calcula o grau de um dispositivo
+    conexoes(dispositivo) {
+        this._validar(dispositivo);
+        return this.adj.get(dispositivo).arestas.length;
+    }
+
+    // calcula a resistencia media de um dispositivo (soma dos pesos / grau)
+    resistenciaMedia(dispositivo) {
+        this._validar(dispositivo);
+        const arestas = this.adj.get(dispositivo).arestas;
+        const conexoes = this.conexoes(dispositivo);
+
+        // evitar divisao por zero
+        if (conexoes === 0) return 0;
+
+        const somaPesos = arestas.reduce((acc, val) => acc + val.peso, 0);
+        return somaPesos / conexoes;
+    }
+
+    dispositivosVulneraveis() {
+        const vulneraveis = [];
+
+        // para cada dispositivo, calcula o grau e resistencia media
+        for (const dispositivo of this.vertices()) {
+            vulneraveis.push({
+                dispositivo: dispositivo,
+                grau: this.conexoes(dispositivo),
+                resistenciaMedia: this.resistenciaMedia(dispositivo)
+            });
+        }
+
+        // ordena os dispositivos mais vulneraveis
+        vulneraveis.sort((a, b) => {
+            // Ordenar por grau (descendente)
+            if (b.grau !== a.grau) return b.grau - a.grau;
+            // Se graus forem iguais, ordenar por resistência média (ascendente)
+            return a.resistenciaMedia - b.resistenciaMedia;
+        });
+
+        return vulneraveis;
+    }
+
     // calcula o tempo de infeccao para cada dispositivo usando Dijkstra
     calcularTemposInfeccao() {
         const tempos = {};
@@ -138,6 +180,26 @@ class Grafo {
     exibirSequenciaInfeccao() {
         const { sequenciaFormatada } = this.sequenciaInfeccao();
         return `\nSequência de infecção: ${sequenciaFormatada}`;
+    }
+
+    exibirDispositivosVulneraveis() {
+        const vulneraveis = this.dispositivosVulneraveis();
+        const topN = 3;
+        const selecionados = vulneraveis.slice(0, Math.min(topN, vulneraveis.length));
+
+        let resultado = '\nTop ' + selecionados.length + ' dispositivos mais vulneráveis:\n';
+        resultado += 'Dispositivo\tConexões\tResistência Média\n';
+        resultado += '-------------------------------------------\n';
+
+        if (selecionados.length === 0) {
+            resultado += 'Nenhum dispositivo encontrado.\n';
+            return resultado;
+        }
+
+        for (const item of selecionados) {
+            resultado += `${item.dispositivo}\t\t${item.grau}\t\t${item.resistenciaMedia.toFixed(2)}\n`;
+        }
+        return resultado;
     }
 
     // Representação em string do grafo
