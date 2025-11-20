@@ -69,6 +69,7 @@ function exibirGrafo(grafo)  {
     console.log('\nGrafo carregado:\n');
     console.log(grafo.toString());
     console.log(grafo.exibirTempoContagio());
+    console.log(grafo.exibirSequenciaInfeccao());
 }
 
 export function carregarGrafo(pathArquivo) {

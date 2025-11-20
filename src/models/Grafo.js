@@ -86,6 +86,36 @@ class Grafo {
         return Math.max(...tempos);
     }
 
+    sequenciaInfeccao() {
+        const tempos = this.calcularTemposInfeccao();
+        let listaDispositivos = [];
+        const vertices = this.vertices();
+
+        // cria um array de tuplas [dispositivo, tempo]
+        for (let i = 0; i < vertices.length; i++) {
+            listaDispositivos.push([vertices[i], tempos[i]]);
+        }
+
+        // filtra quaisquer nós inalcançáveis (tempo infinito)
+        listaDispositivos = listaDispositivos.filter(([dispositivo, tempo]) => tempo !== Infinity);
+        
+        // ordena o array com base no tempo de infecção (ascendente)
+        listaDispositivos.sort((a, b) => a[1] - b[1]); 
+        
+        // mapeia para obter apenas a sequência de nomes dos dispositivos
+        const sequencia = listaDispositivos.map(([dispositivo, tempo]) => dispositivo);
+
+        // formata o resultado para um insight claro
+        const sequenciaFormatada = listaDispositivos
+            .map(([dispositivo, tempo]) => `${dispositivo} (${tempo}h)`)
+            .join(' → ');
+
+        return {
+            sequencia: sequencia,
+            sequenciaFormatada: sequenciaFormatada
+        }
+    }
+
     // exibe o tempo total e minimo de contágio
     exibirTempoContagio() {
         const horasTotais = this.calcularMinimoTempo();
@@ -102,6 +132,12 @@ class Grafo {
         };
 
         return `\nTempo médio de contágio: ${formatHoras(horaMedia)}\nTempo total de contágio: ${formatHoras(horasTotais)}.`;
+    }
+
+    // exibe a sequência de infecção
+    exibirSequenciaInfeccao() {
+        const { sequenciaFormatada } = this.sequenciaInfeccao();
+        return `\nSequência de infecção: ${sequenciaFormatada}`;
     }
 
     // Representação em string do grafo
