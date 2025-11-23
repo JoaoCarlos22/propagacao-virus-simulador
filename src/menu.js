@@ -1,5 +1,5 @@
 import { readdirSync, existsSync } from 'fs';
-import { gerarInstancia } from './gerarInstancia.js';
+import { gerarInstancia1, gerarInstancia2 } from './gerarInstancia.js';
 
 // opções do menu
 function carregarOpcoes() {
@@ -115,11 +115,53 @@ export async function menu2(rl) {
     // gerar a instância
     console.log('\nGerando nova instância com Gemini, aguarde...');
     const topologia = opcao.label.toLowerCase();
-    await gerarInstancia(topologia, Number(numVertices), Number(numInfectados));
+    await gerarInstancia1(topologia, Number(numVertices), Number(numInfectados));
 
     return {
         key: opcao.key,
         label: opcao.label,
         path: getPath(opcao.key, numVertices)
     }
+}
+
+// menu para gerar múltiplas redes
+export async function menuMultiRedes(rl) {
+    let numRedes = '';
+    while (isNaN(numRedes) || Number(numRedes) < 2 || Number(numRedes) > 5) {
+        numRedes = (await prompt(rl, 'Quantas redes deseja gerar? (2 a 5): ')).trim();
+    }
+    const redes = [];
+
+    // para cada rede, pergunta os parâmetros
+    for (let i = 0; i < Number(numRedes); i++) {
+        console.log(`\n--- Rede ${i+1} ---`);
+        const opcoes = carregarOpcoes().slice(0, 3);
+        opcoes.forEach(opt => console.log(`${opt.key} - ${opt.label}`));
+
+        // ler a topologia do usuário
+        let tipo = '';
+        while (!['1','2','3'].includes(tipo)) {
+            tipo = (await prompt(rl, 'Digite o número da topologia: ')).trim();
+        }
+
+        // ler a quantidade de vertices
+        let numVertices = '';
+        while (isNaN(numVertices) || Number(numVertices) < 5 || Number(numVertices) > 30) {
+            numVertices = (await prompt(rl, 'Digite a quantidade de vértices (entre 5 e 30): ')).trim();
+        }
+
+        // ler a quantidade de vértices infectados
+        let numInfectados = '';
+        while (isNaN(numInfectados) || Number(numInfectados) < 1 || Number(numInfectados) >= Number(numVertices)) {
+            numInfectados = (await prompt(rl, `Digite a quantidade de vértices infectados (entre 1 e ${Number(numVertices) - 1}): `)).trim();
+        }
+
+        // adicionar ao array de redes
+        const topologia = opcoes.find(opt => opt.key === tipo).label.toLowerCase();
+        redes.push({ topologia, numVertices: Number(numVertices), numInfectados: Number(numInfectados) });
+    }
+    console.log('\nGerando nova instância com Gemini, aguarde...');
+    await gerarInstancia2(redes);
+    const caminho = `src/data/multiredes/multirede${redes.length}.txt`;
+    return caminho;
 }

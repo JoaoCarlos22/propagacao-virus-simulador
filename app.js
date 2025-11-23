@@ -1,5 +1,5 @@
-import { carregarGrafo } from './src/arquivoService.js';
-import { menu1, menu2 } from './src/menu.js';
+import { carregarGrafo, carregarMultiRede } from './src/arquivoService.js';
+import { menu1, menu2, menuMultiRedes } from './src/menu.js';
 import dotenv from 'dotenv';
 import readline from 'readline';
 
@@ -22,8 +22,8 @@ async function main() {
         console.clear();
         console.log('Bem-vindo ao simulador de propagação de vírus!\n');
         let acao = '';
-        while (acao !== '1' && acao !== '2') {
-            acao = (await prompt(rl, 'Digite 1 para usar uma instância existente ou 2 para criar uma nova com IA: ')).trim();
+        while (acao !== '1' && acao !== '2' && acao !== '3') {
+            acao = (await prompt(rl, '1 - Usar uma instância existente\n2 - Criar uma nova com IA\n3 - Gerar múltiplas redes\nDigite sua opção: ')).trim();
         }
 
         // Carregar grafo existente
@@ -60,6 +60,13 @@ async function main() {
             }
             try {
                 carregarGrafo(opcao.path);
+            } catch (err) {
+                console.log(`Erro ao ler/parsear o arquivo: ${err.message}`);
+            }
+        } else if (acao === '3') {
+            const caminho = await menuMultiRedes(rl);
+            try {
+                carregarMultiRede(caminho);
             } catch (err) {
                 console.log(`Erro ao ler/parsear o arquivo: ${err.message}`);
             }
