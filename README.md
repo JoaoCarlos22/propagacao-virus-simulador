@@ -116,11 +116,53 @@ H	I	5
 ...
 ```
 
-## ℹ️ Observações
+
+## 🔄 Fluxo de Funcionamento do Simulador
+
+O simulador segue o seguinte fluxo para análise da propagação do vírus:
+
+1. **Escolha do Usuário**
+   - O usuário escolhe no menu se deseja:
+     - Usar uma instância existente
+     - Gerar uma nova instância com IA (Gemini)
+     - Gerar e simular múltiplas redes conectadas
+
+2. **Geração ou Seleção do Arquivo de Rede**
+   - Se for uma instância existente, o usuário seleciona o arquivo desejado.
+   - Se for uma nova instância, o sistema gera o arquivo automaticamente com base nos parâmetros escolhidos (topologia, número de vértices, dispositivos infectados, etc), salvando em `src/data/`.
+   - Para múltiplas redes, o sistema gera ou carrega um arquivo especial contendo todas as redes e suas conexões.
+
+3. **Leitura e Transformação do Grafo**
+   - O arquivo selecionado é lido e transformado em uma estrutura de grafo na memória.
+   - Para múltiplas redes, cada rede é lida separadamente e depois todas são unificadas em um grafo completo.
+
+4. **Simulação da Propagação**
+   - O simulador executa o algoritmo de propagação (BFS/Dijkstra) a partir dos dispositivos inicialmente infectados.
+   - O tempo de contágio é calculado considerando o nível de segurança (peso) de cada aresta.
+
+5. **Cálculo dos Insights**
+   - O sistema calcula e exibe:
+     - Tempo médio e total de contágio
+     - Sequência de infecção dos dispositivos
+     - Dispositivos mais vulneráveis
+     - Estatísticas por rede e para o grafo completo (em caso de multi-redes)
+
+6. **Exibição dos Resultados**
+   - Os resultados são apresentados no terminal de forma clara, destacando os principais insights para análise.
+
+## Observações
 
 - 🎓 O projeto foi desenvolvido para fins acadêmicos.
 - 💸 O uso da API Gemini pode gerar custos dependendo do seu plano Google Cloud.
 - 🧐 Sempre revise as instâncias geradas automaticamente para garantir a validade dos dados.
+
+## 👥 Colaboradores
+
+- João Carlos Guimarães Iannuzzi
+- Diandre Bruce
+- Evelly
+- Luanne
+- Veríssimo Casas
 
 ---
 
