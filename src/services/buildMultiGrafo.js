@@ -54,14 +54,19 @@ export function parseMultiRede(text) {
             continue;
         }
 
+        // leitura dos dispositivos infectados por rede (# Dispositivos infectados: rede1: H, J, rede2: E, A)
         if (l.startsWith('# Dispositivos infectados:')) {
-            const re = /rede\s*(\d+)\s*:\s*([^,#]+)/gi;
+            // Remove o início do comentário
+            let partes = l.replace('# Dispositivos infectados:', '').trim();
+            // Regex para pegar cada "redeN: ..." bloco até a próxima "redeN:" ou fim da linha
+            const re = /rede\s*(\d+)\s*:\s*([^#]+?)(?=,\s*rede\d+:|$)/gi;
             let m;
-            while ((m = re.exec(l)) !== null) {
+            while ((m = re.exec(partes)) !== null) {
                 const idx = parseInt(m[1], 10) - 1;
                 let rhs = (m[2] || '').trim();
                 rhs = rhs.split('#', 1)[0].trim();
                 if (!rhs) continue;
+                // Separa por vírgula, ponto e vírgula ou espaço
                 const parts = rhs.split(/[,;]\s*|\s+/).filter(Boolean);
                 if (!isNaN(idx) && redes[idx]) {
                     redes[idx].dispositivosInfectados = Array.from(new Set([...(redes[idx].dispositivosInfectados || []), ...parts]));
