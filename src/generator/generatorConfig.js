@@ -30,7 +30,9 @@ export const promptRede2 = ({ redes }) => {
         # Quantidade de redes: ${redes.length}
         # Topologias das Redes: ${redes.map((r, i) => `rede${i+1}: ${fmt(r.topologia)}`).join(', ')}
         # Número de vértices: ${redes.map((r, i) => `rede${i+1}: ${fmt(r.numVertices)}`).join(', ')}
-        # Dispositivos infectados: ${redes.map((r, i) => `rede${i+1}: ${fmt(r.infectados)}`).join(', ')}
+        # Número de dispositivos infectados: ${redes.map((r, i) => `rede${i+1}: ${fmt(r.numInfectados)}`).join(', ')}
+        # (Crie uma lista de dispositivos infectados para cada rede na mesma linha, ex: rede1: A, C, rede2: D, F)
+        # Dispositivos infectados: 
         #
         # rede 1
         # origem | destino | nivel de segurança
