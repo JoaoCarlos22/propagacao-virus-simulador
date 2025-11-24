@@ -1,4 +1,3 @@
-
 # 🦠 Simulador de Propagação de Vírus em Redes 🕸️
 
 Este projeto simula a propagação de um vírus em diferentes topologias de redes de computadores, permitindo analisar o tempo de contágio, dispositivos mais vulneráveis e o impacto de múltiplos dispositivos infectados inicialmente. O simulador suporta geração automática de instâncias de redes usando IA (Google Gemini) 🤖 e análise de múltiplas redes conectadas.
@@ -10,8 +9,9 @@ Este projeto simula a propagação de um vírus em diferentes topologias de rede
 - 🧑‍💻 Suporte a múltiplos dispositivos infectados inicialmente.
 - 🔗 Análise de múltiplas redes conectadas (multi-redes).
 - ⏱️ Cálculo do tempo médio e total de contágio.
-- 🛡️ Identificação dos dispositivos mais vulneráveis.
-- 💻 Interface interativa via terminal.
+ - 🛡️ Identificação dos dispositivos mais vulneráveis.
+ - 💻 Interface interativa via terminal.
+ - ✏️ Edição interativa do grafo: atualizar peso de conexões e remover dispositivos.
 
 ## 🗂️ Estrutura do Projeto
 
@@ -73,7 +73,41 @@ Você verá um menu interativo com as opções:
 - **2️⃣ Criar uma nova com IA:** Gere uma nova rede personalizada usando Gemini.
 - **3️⃣ Gerar múltiplas redes:** Crie e simule redes conectadas entre si.
 
+
 Siga as instruções do terminal para escolher topologia, número de vértices, dispositivos infectados, etc.
+
+**Edição Interativa do Grafo**
+
+O simulador agora permite editar o grafo durante a execução:
+- No menu, ao carregar uma instância, após a exibição do grafo você pode escolher a opção de edição.
+- Opções de edição:
+   - Atualizar peso de uma aresta: informe a origem (letra), destino (letra) e novo peso (0-10).
+   - Remover um dispositivo: informe a letra do dispositivo a ser removido.
+
+Observações sobre a edição:
+- As alterações são aplicadas em memória e a visualização do grafo é atualizada imediatamente.
+- Por enquanto as alterações **não** são persistidas automaticamente no arquivo `.txt` da instância; se desejar, posso adicionar uma opção para salvar as alterações de volta ao arquivo.
+
+**Correção: remoção de dispositivo infectado**
+
+Corrigimos um bug em que remover um dispositivo infectado causava erro ("Cannot read properties of undefined (reading 'arestas')"). Agora, ao remover um dispositivo:
+- O nó é removido de forma segura do mapa de adjacência.
+- O nó é removido também da lista `dispositivosInfectados` para evitar referências a vértices inexistentes.
+- Os vizinhos que apontavam para o nó removido têm as arestas limpas corretamente.
+
+Arquivos modificados relacionados a essa correção e nova funcionalidade:
+- `src/models/Grafo.js` — melhorias em `deletarDispositivo`, validações e suporte a múltiplos infectados.
+- `src/menu.js` — menu de edição para atualizar peso de aresta e remover dispositivo.
+- `app.js` — fluxo atualizado para carregar o grafo e chamar o menu de edição.
+- `src/arquivoService.js` — `carregarGrafo` agora pode retornar o grafo carregado para edição.
+
+Recomendações de teste (local):
+1. Execute `node app.js`.
+2. Carregue uma instância existente (por ex. `src/data/estrela/estrela6.txt`).
+3. Escolha a opção de edição e: atualize um peso, remova um dispositivo não infectado e depois remova um infectado.
+4. Verifique que não ocorrem erros e que o grafo exibido reflete as alterações.
+
+Se quiser que eu implemente a persistência (salvar alterações no `.txt`) ou que valide se uma aresta existe antes de atualizá-la (com opção de criação), posso adicionar isso em seguida.
 
 ## 🤖 Geração de Instâncias com IA
 
@@ -149,6 +183,22 @@ O simulador segue o seguinte fluxo para análise da propagação do vírus:
 
 6. **Exibição dos Resultados**
    - Os resultados são apresentados no terminal de forma clara, destacando os principais insights para análise.
+
+## 🔒 Relação entre Nível de Segurança, Tempo de Contágio e Medidas de Segurança
+
+Cada aresta do grafo possui um **nível de segurança** (peso) de 1 a 10, que representa o grau de proteção entre dois dispositivos. O tempo de contágio e as medidas de segurança associadas a cada faixa de peso são:
+
+| Nível de Segurança | Tempo de Contágio | Medidas de Segurança Relacionadas (Agregadas) |
+|--------------------|-------------------|-----------------------------------------------|
+| **1-2 (Muito Baixo)** | 1h – 2h | **Sem Firewall/Antivírus.** Conexão direta. Senha padrão. Serviço desatualizado. |
+| **3-5 (Baixo a Moderado)** | 4h – 16h | **Antivírus Desatualizado.** Firewall configurado de forma básica (regras abertas). Sem segmentação de rede (VLAN). |
+| **6-8 (Alto)** | 20h – 28h | **Firewall WAF/IDS ativo. VPN obrigatória.** Servidor por trás de DMZ. Segmentação de rede forte. |
+| **9-10 (Crítico)** | 32h – 48h | **Autenticação de Múltiplos Fatores (MFA). Uso de Zero Trust.** Patches 100% atualizados. Criptografia ponta a ponta. |
+
+- **Quanto maior o nível de segurança (peso), maior o tempo necessário para o vírus se propagar entre os dispositivos.**
+- Os pesos são atribuídos automaticamente ou definidos nos arquivos de instância, e refletem o cenário de proteção de cada conexão.
+
+---
 
 ## Observações
 
