@@ -1,0 +1,25 @@
+# Topologia de Rede: malha
+# Número de vértices: 7
+# Dispositivos infectados: A, E
+# origem | destino | nivel de segurança
+A	B	7
+A	C	2
+A	D	9
+A	E	4
+A	F	8
+A	G	1
+B	C	5
+B	D	10
+B	E	3
+B	F	6
+B	G	9
+C	D	1
+C	E	7
+C	F	2
+C	G	8
+D	E	5
+D	F	10
+D	G	3
+E	F	6
+E	G	9
+F	G	4

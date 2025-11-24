@@ -1,7 +1,7 @@
 ```
 # Topologia de Rede: anel
 # Número de vértices: 10
-# Dispositivos infectados: A, I
+# Dispositivos infectados: I
 A	B	7
 B	C	3
 C	D	9
