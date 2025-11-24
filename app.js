@@ -1,5 +1,5 @@
 import { carregarGrafo, carregarMultiRede } from './src/arquivoService.js';
-import { menu1, menu2, menuMultiRedes } from './src/menu.js';
+import { menu1, menu2, menu3, menuMultiRedes } from './src/menu.js';
 import dotenv from 'dotenv';
 import readline from 'readline';
 
@@ -42,7 +42,8 @@ async function main() {
                 return;
             }
             try {
-                carregarGrafo(opcao.path);
+                const grafo = carregarGrafo(opcao.path);
+                await menu3(grafo, rl);
             } catch (err) {
                 console.log(`Erro ao ler/parsear o arquivo: ${err.message}`);
             }
@@ -59,14 +60,16 @@ async function main() {
                 return;
             }
             try {
-                carregarGrafo(opcao.path);
+                const grafo = carregarGrafo(opcao.path);
+                await menu3(grafo, rl);
             } catch (err) {
                 console.log(`Erro ao ler/parsear o arquivo: ${err.message}`);
             }
         } else if (acao === '3') {
             const caminho = await menuMultiRedes(rl);
             try {
-                carregarMultiRede(caminho);
+                const multiRede = carregarMultiRede(caminho);
+                await menu3(multiRede, rl);
             } catch (err) {
                 console.log(`Erro ao ler/parsear o arquivo: ${err.message}`);
             }

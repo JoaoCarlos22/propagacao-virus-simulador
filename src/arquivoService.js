@@ -38,4 +38,7 @@ export function carregarGrafo(pathArquivo) {
     const grafo = buildGrafoFromText(content);
 
     exibirGrafo(grafo);
+
+    // retorna o grafo para que menus possam editar/exibir novamente
+    return grafo;
 }

@@ -9,7 +9,8 @@ class Grafo {
         this.adj = new Map();
         this.topologia = topologia || 'indefinida';
         this.numDispositivos = numDispositivos || 0;
-        this.dispositivosInfectados = dispoInfectados || null;
+        // garantir array seguro para dispositivos infectados
+        this.dispositivosInfectados = Array.isArray(dispoInfectados) ? [...dispoInfectados] : (dispoInfectados ? [...dispoInfectados] : []);
     }
 
     // para cada nivel de peso é atribuido um tempo (hora) de contágio
@@ -29,6 +30,52 @@ class Grafo {
         this._validar(v);
         this.adj.get(u).arestas.push({ to: v, peso });
         this.adj.get(v).arestas.push({ to: u, peso });
+    }
+
+    // atualiza o peso de uma aresta existente
+    atualizarAresta(u, v, novoPeso) {
+        this._validar(u);
+        this._validar(v);
+        
+        // Função auxiliar para atualizar o peso de uma aresta
+        const atualizarPeso = (from, to, peso) => {
+            const arestas = this.adj.get(from).arestas;
+            for (const aresta of arestas) {
+                if (aresta.to === to) {
+                    aresta.peso = peso;
+                    return;
+                }
+            }
+        };
+
+        // Atualiza o peso em ambas as direções
+        atualizarPeso(u, v, novoPeso);
+        atualizarPeso(v, u, novoPeso);
+    }
+
+    // remove um dispositivo e todas as suas conexões
+    deletarDispositivo(dispositivo) {
+        // se o dispositivo não existir, nada a fazer
+        if (!this.adj.has(dispositivo)) return;
+
+        // remover o dispositivo da lista de infectados, se presente
+        if (Array.isArray(this.dispositivosInfectados)) {
+            this.dispositivosInfectados = this.dispositivosInfectados.filter(d => d !== dispositivo);
+        }
+
+        const entry = this.adj.get(dispositivo);
+        const vizinhos = entry ? entry.arestas.map(a => a.to) : [];
+
+        // remover todas as arestas que apontam para o dispositivo a ser removido
+        for (const vizinho of vizinhos) {
+            if (!this.adj.has(vizinho)) continue; // proteção caso vértice vizinho já tenha sido removido
+            const arestasVizinho = this.adj.get(vizinho).arestas;
+            this.adj.get(vizinho).arestas = arestasVizinho.filter(a => a.to !== dispositivo);
+        }
+        this.adj.delete(dispositivo);
+        if (this.numDispositivos > 0) {
+            this.numDispositivos--;
+        }
     }
 
     vertices() {
@@ -84,12 +131,14 @@ class Grafo {
         const fila = [];
 
         // Suporte a múltiplos dispositivos infectados
-        let fontes = this.dispositivosInfectados;
-        
+        let fontes = Array.isArray(this.dispositivosInfectados) ? [...this.dispositivosInfectados] : [];
+
         // Inicializa todos os tempos como infinito, exceto os infectados iniciais
         for (const v of this.vertices()) {
             tempos[v] = Infinity;
         }
+        // garantir que apenas fontes que ainda existem no grafo sejam consideradas
+        fontes = fontes.filter(f => this.adj.has(f));
         for (const fonte of fontes) {
             tempos[fonte] = 0;
             fila.push({ vertice: fonte, tempo: 0 });
@@ -102,8 +151,10 @@ class Grafo {
             if (infectados.has(atual)) continue;
             infectados.add(atual);
 
+            const nodoAtual = this.adj.get(atual);
+            if (!nodoAtual) continue; // proteção adicional caso o nó tenha sido removido
             // Atualiza os tempos dos vizinhos
-            for (const aresta of this.adj.get(atual).arestas) {
+            for (const aresta of nodoAtual.arestas) {
                 const vizinho = aresta.to;
                 const tempoNovo = tempoAtual + this.tempoPorNivel(aresta.peso);
 

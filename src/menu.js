@@ -1,5 +1,6 @@
 import { readdirSync, existsSync } from 'fs';
 import { gerarInstancia1, gerarInstancia2 } from './gerarInstancia.js';
+import { exibirGrafo } from './services/buildMonoGrafo.js';
 
 // opções do menu
 function carregarOpcoes() {
@@ -164,4 +165,46 @@ export async function menuMultiRedes(rl) {
     await gerarInstancia2(redes);
     const caminho = `src/data/multiredes/multirede${redes.length}.txt`;
     return caminho;
+}
+
+// menu responsavel por perguntar se o usuario quer atualizar um peso ou remover um dispositivo
+export async function menu3(grafo, rl) {
+    if (!grafo) {
+        console.log('Nenhum grafo disponível para edição.');
+        return;
+    }
+
+    while (true) {
+        console.log('\n--- Menu de Edição ---');
+        console.log('1 - Atualizar peso de uma aresta');
+        console.log('2 - Remover um dispositivo');
+        console.log('3 - Voltar');
+
+        const escolha = (await prompt(rl, 'Escolha uma opção: ')).trim();
+
+        if (escolha === '1') {
+            const u = (await prompt(rl, 'Origem (letra): ')).trim();
+            const v = (await prompt(rl, 'Destino (letra): ')).trim();
+            let novoPeso;
+            while (isNaN(novoPeso) || Number(novoPeso) < 0 || Number(novoPeso) > 10) {
+                novoPeso = (await prompt(rl, 'Novo peso (0-10): ')).trim();
+            }
+            grafo.atualizarAresta(u, v, Number(novoPeso));
+            console.log(`Peso atualizado entre ${u} e ${v} para ${novoPeso}.`);
+            exibirGrafo(grafo);
+        } else if (escolha === '2') {
+            const dispositivo = (await prompt(rl, 'Dispositivo a remover (letra): ')).trim();
+            if (!grafo.vertices().includes(dispositivo)) {
+                console.log('Dispositivo não encontrado no grafo.');
+            } else {
+                grafo.deletarDispositivo(dispositivo);
+                console.log(`Dispositivo ${dispositivo} removido.`);
+                exibirGrafo(grafo);
+            }
+        } else if (escolha === '3') {
+            break;
+        } else {
+            console.log('Opção inválida, tente novamente.');
+        }
+    }
 }
