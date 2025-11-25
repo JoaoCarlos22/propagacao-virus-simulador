@@ -180,23 +180,53 @@ export function buildMultiGrafo({ redesInfo, arestasConexao }) {
     let todosInfectados = [];
     let todasArestas = [];
 
-    for (const rede of redesInfo) {
+    // novo: mapeamento vértice -> grupo (ex.: "rede1", "rede2")
+    const grupoPorVertice = {};
+    // novo: topologia por grupo (grupo -> "estrela", "anel", etc.)
+    const topologiaGrupos = {};
+
+    redesInfo.forEach((rede, idx) => {
+        const grupoId = `rede${idx + 1}`;
+        topologiaGrupos[grupoId] = rede.topologia || 'indefinida';
+
+        // arestas internas da rede
         for (const a of rede.arestas) {
             todasArestas.push(a);
             const [u, v] = a.split(/\s+/);
             todosVertices.add(u);
             todosVertices.add(v);
+
+            if (!grupoPorVertice[u]) grupoPorVertice[u] = grupoId;
+            if (!grupoPorVertice[v]) grupoPorVertice[v] = grupoId;
         }
-        todosInfectados.push(...rede.dispositivosInfectados);
-    }
+
+        // dispositivos infectados dessa rede
+        if (Array.isArray(rede.dispositivosInfectados)) {
+            for (const d of rede.dispositivosInfectados) {
+                todosInfectados.push(d);
+                if (!grupoPorVertice[d]) grupoPorVertice[d] = grupoId;
+            }
+        }
+    });
+
+    // arestas de conexão entre redes
     for (const a of arestasConexao) {
         todasArestas.push(a);
         const [u, v] = a.split(/\s+/);
         todosVertices.add(u);
         todosVertices.add(v);
+        // aqui NÃO atribuímos grupo novo — a ideia é cada vértice
+        // pertencer à sua rede de origem; se um vértice aparecer
+        // só aqui, ele fica sem grupo (pode ser tratado como "ponte")
     }
+
     todosInfectados = Array.from(new Set(todosInfectados));
-    const grafo = new Grafo('multirede', todosVertices.size, todosInfectados);
+
+    // novo: passamos options com grupoPorVertice e topologiaGrupos
+    const grafo = new Grafo('multirede', todosVertices.size, todosInfectados, {
+        grupoPorVertice,
+        topologiaGrupos
+    });
 
     for (const a of todasArestas) {
         const [u, v, peso] = a.split(/\s+/);

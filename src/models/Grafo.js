@@ -4,13 +4,19 @@ class Grafo {
         6: 20, 7: 24, 8: 28, 9: 32, 10: 48
     };
 
-    constructor(topologia, numDispositivos, dispoInfectados) {
+    constructor(topologia, numDispositivos, dispoInfectados, options = {}) {
         // Mapa de adjacência: vértice (dispositivo) -> { arestas: [{to, peso (nível de segurança)}], infectado: boolean }
         this.adj = new Map();
         this.topologia = topologia || 'indefinida';
         this.numDispositivos = numDispositivos || 0;
         // garantir array seguro para dispositivos infectados
         this.dispositivosInfectados = Array.isArray(dispoInfectados) ? [...dispoInfectados] : (dispoInfectados ? [...dispoInfectados] : []);
+
+        // 🔹 novo: metadados de grupos para multiredes
+        // mapa: idDoVertice -> "rede1" | "rede2" | ...
+        this.grupoPorVertice = options.grupoPorVertice || null;
+        // mapa: "rede1" -> "estrela", "rede2" -> "malha", etc.
+        this.topologiaGrupos = options.topologiaGrupos || null;
 
         // cache interno dos tempos de infecção (para evitar recalcular Dijkstra toda hora)
         this._temposInfeccaoCache = null;
@@ -543,16 +549,102 @@ class Grafo {
         const tempos = this.calcularTemposInfeccao();     // { id: tempo }
         const totalNodes = vertices.length;
 
+        // Helper para criar node sem repetir código
+        const makeNode = (id, x, y, z) => {
+            const infectedTime = tempos[id];
+            const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
+            const isInfectedStart = Array.isArray(this.dispositivosInfectados)
+                ? this.dispositivosInfectados.includes(id)
+                : false;
+
+            return {
+                id,
+                x,
+                y,
+                z,
+                infectedTime,
+                isInfectedStart,
+                isReachable
+            };
+        };
+
         const nodes = [];
-
-        // Se a topologia for uma estrela, aplicamos um layout especial:
-        // - nó central (maior grau) no (0, 0, 0)
-        // - demais nós em círculo ao redor
         const topo = (this.topologia || '').toLowerCase();
-        const ehEstrela = topo.startsWith('estrela');
+        const ehMultirede = topo.startsWith('multirede');
+        const ehEstrelaSimples = topo.startsWith('estrela');
 
-        if (ehEstrela && totalNodes > 0) {
-            // Descobrir o nó central: aquele com maior número de conexões
+        if (ehMultirede && this.grupoPorVertice) {
+            // 🔹 MULTI-REDE: clusteriza por grupo (rede1, rede2, etc.)
+            const grupos = new Map(); // grupoId -> array de vértices
+
+            for (const id of vertices) {
+                const g = this.grupoPorVertice[id] || 'default';
+                if (!grupos.has(g)) grupos.set(g, []);
+                grupos.get(g).push(id);
+            }
+
+            const groupIds = Array.from(grupos.keys());
+            const numGroups = groupIds.length || 1;
+
+            // distância entre grupos no eixo X
+            const baseDist = Math.max(60, totalNodes * 3);
+
+            groupIds.forEach((grupoId, idx) => {
+                const vs = grupos.get(grupoId);
+                if (!vs || vs.length === 0) return;
+
+                // centro do grupo no espaço
+                const centerX = (idx - (numGroups - 1) / 2) * baseDist;
+                const centerZ = 0;
+
+                const topoGrupo = (this.topologiaGrupos && this.topologiaGrupos[grupoId])
+                    ? this.topologiaGrupos[grupoId].toLowerCase()
+                    : '';
+
+                const ehEstrelaGrupo = topoGrupo.startsWith('estrela');
+
+                if (ehEstrelaGrupo && vs.length > 1) {
+                    // layout estrela por grupo
+                    let central = vs[0];
+                    let maxGrau = this.conexoes(central);
+
+                    for (const v of vs) {
+                        const g = this.conexoes(v);
+                        if (g > maxGrau) {
+                            maxGrau = g;
+                            central = v;
+                        }
+                    }
+
+                    const outros = vs.filter(v => v !== central);
+                    const radius = Math.max(20, vs.length * 3);
+
+                    // nó central
+                    nodes.push(makeNode(central, centerX, 0, centerZ));
+
+                    // folhas em círculo
+                    outros.forEach((id, index) => {
+                        const angle = (2 * Math.PI * index) / Math.max(1, outros.length);
+                        const x = centerX + radius * Math.cos(angle);
+                        const z = centerZ + radius * Math.sin(angle);
+                        nodes.push(makeNode(id, x, 0, z));
+                    });
+
+                } else {
+                    // layout genérico em círculo para esse grupo
+                    const radius = Math.max(20, vs.length * 3);
+
+                    vs.forEach((id, index) => {
+                        const angle = (2 * Math.PI * index) / Math.max(1, vs.length);
+                        const x = centerX + radius * Math.cos(angle);
+                        const z = centerZ + radius * Math.sin(angle);
+                        nodes.push(makeNode(id, x, 0, z));
+                    });
+                }
+            });
+
+        } else if (ehEstrelaSimples && totalNodes > 0) {
+            // 🔹 CASO ESTRELA "SIMPLES" (um grafo só)
             let central = vertices[0];
             let maxGrau = this.conexoes(central);
 
@@ -564,79 +656,26 @@ class Grafo {
                 }
             }
 
-            // Configuração geométrica
-            const radius = Math.max(20, totalNodes * 4); // distância do centro
             const outros = vertices.filter(v => v !== central);
+            const radius = Math.max(20, totalNodes * 3);
 
-            // Primeiro, adiciona o nó central
-            {
-                const id = central;
-                const infectedTime = tempos[id];
-                const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
-                const isInfectedStart = Array.isArray(this.dispositivosInfectados)
-                    ? this.dispositivosInfectados.includes(id)
-                    : false;
+            nodes.push(makeNode(central, 0, 0, 0));
 
-                nodes.push({
-                    id,
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                    infectedTime,
-                    isInfectedStart,
-                    isReachable
-                });
-            }
-
-            // Depois, distribui os demais em um círculo
             outros.forEach((id, index) => {
                 const angle = (2 * Math.PI * index) / Math.max(1, outros.length);
                 const x = radius * Math.cos(angle);
                 const z = radius * Math.sin(angle);
-                const y = 0;
-
-                const infectedTime = tempos[id];
-                const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
-                const isInfectedStart = Array.isArray(this.dispositivosInfectados)
-                    ? this.dispositivosInfectados.includes(id)
-                    : false;
-
-                nodes.push({
-                    id,
-                    x,
-                    y,
-                    z,
-                    infectedTime,
-                    isInfectedStart,
-                    isReachable
-                });
+                nodes.push(makeNode(id, x, 0, z));
             });
 
         } else {
-            // Layout genérico: todos os nós em círculo
-            const radius = Math.max(20, totalNodes * 4);      // raio mínimo 20, cresce com a quantidade
+            // 🔹 CASO GENÉRICO (um grafo só, sem topologia especial)
+            const radius = Math.max(20, totalNodes * 4);
             vertices.forEach((id, index) => {
                 const angle = (2 * Math.PI * index) / Math.max(1, totalNodes);
                 const x = radius * Math.cos(angle);
                 const z = radius * Math.sin(angle);
-                const y = 0; // plano "chão" da visualização
-
-                const infectedTime = tempos[id]; // pode ser 0, número ou Infinity
-                const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
-
-                const isInfectedStart = Array.isArray(this.dispositivosInfectados)
-                    ? this.dispositivosInfectados.includes(id)
-                    : false;
-
-                nodes.push({
-                    id,
-                    x,
-                    y,
-                    z,
-                    infectedTime,
-                    isInfectedStart,
-                    isReachable
-                });
+                nodes.push(makeNode(id, x, 0, z));
             });
         }
 

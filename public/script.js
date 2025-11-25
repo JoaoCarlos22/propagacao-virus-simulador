@@ -979,6 +979,9 @@ async function deleteNodeById(nodeId, source = 'edit') {
     loading.style.display = 'block';
     if (source === 'edit') {
         deleteNodeBtn.disabled = true;
+    } else if (source === 'panel') {
+        const removeBtn = document.getElementById('removeNodeBtn');
+        if (removeBtn) removeBtn.disabled = true;
     }
 
     try {
@@ -1017,6 +1020,9 @@ async function deleteNodeById(nodeId, source = 'edit') {
         loading.style.display = 'none';
         if (source === 'edit') {
             deleteNodeBtn.disabled = false;
+        } else if (source === 'panel') {
+            const removeBtn = document.getElementById('removeNodeBtn');
+            if (removeBtn) removeBtn.disabled = false;
         }
     }
 }
