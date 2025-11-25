@@ -145,12 +145,15 @@ class Grafo {
         const fila = [];
 
         // Suporte a múltiplos dispositivos infectados
-        let fontes = Array.isArray(this.dispositivosInfectados) ? [...this.dispositivosInfectados] : [];
+        let fontes = Array.isArray(this.dispositivosInfectados)
+            ? [...this.dispositivosInfectados]
+            : [];
 
         // Inicializa todos os tempos como infinito, exceto os infectados iniciais
         for (const v of this.vertices()) {
             tempos[v] = Infinity;
         }
+
         // garantir que apenas fontes que ainda existem no grafo sejam consideradas
         fontes = fontes.filter(f => this.adj.has(f));
         for (const fonte of fontes) {
@@ -167,6 +170,7 @@ class Grafo {
 
             const nodoAtual = this.adj.get(atual);
             if (!nodoAtual) continue; // proteção adicional caso o nó tenha sido removido
+
             // Atualiza os tempos dos vizinhos
             for (const aresta of nodoAtual.arestas) {
                 const vizinho = aresta.to;
@@ -178,10 +182,9 @@ class Grafo {
                 }
             }
         }
-
-        // retorna os tempos de cada dispositivo infectado
-        return Object.values(tempos);
+        return tempos;
     }
+
 
     // calcula o tempo medio total de infeccao
     calcularMediaTempo() {
