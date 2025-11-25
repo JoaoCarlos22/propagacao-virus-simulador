@@ -107,9 +107,7 @@ class Grafo {
 
         // grafo mudou → invalida cache de tempos
         this._resetTemposCache();
-
-        // 👇 Task 3: marca se não sobrou nenhum infectado inicial
-        // (útil para frontend/histórico detectar "grafo sem sementes")
+        
         if (Array.isArray(this.dispositivosInfectados) &&
             this.dispositivosInfectados.length === 0) {
             this._semInfectadosIniciais = true;
@@ -136,11 +134,13 @@ class Grafo {
 
     // calcula a resistencia media de um dispositivo (soma dos pesos / grau)
     resistenciaMedia(dispositivo) {
-        this._validar(dispositivo);
-        const arestas = this.adj.get(dispositivo).arestas;
-        const conexoes = this.conexoes(dispositivo);
+        const entry = this.adj.get(dispositivo);
+        if (!entry) return 0; // se o vértice não existir, resistência 0
 
-        // evitar divisao por zero
+        const arestas = entry.arestas;
+        const conexoes = arestas.length;
+
+        // evitar divisao por zero (dispositivo isolado)
         if (conexoes === 0) return 0;
 
         const somaPesos = arestas.reduce((acc, val) => acc + val.peso, 0);

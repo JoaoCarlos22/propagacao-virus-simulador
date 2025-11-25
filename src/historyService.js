@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const RESULT_DIR = path.join(__dirname, './data/resultados');
+const RESULT_DIR = path.join(__dirname, 'resultados'); // ou '../resultados'
 
 function garantirPastaResultados() {
     if (!fs.existsSync(RESULT_DIR)) {
