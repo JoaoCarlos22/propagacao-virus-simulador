@@ -543,32 +543,102 @@ class Grafo {
         const tempos = this.calcularTemposInfeccao();     // { id: tempo }
         const totalNodes = vertices.length;
 
-        // layout simples: nós distribuídos em círculo no plano XZ
         const nodes = [];
-        const radius = Math.max(20, totalNodes * 4);      // raio mínimo 20, cresce com a quantidade
-        vertices.forEach((id, index) => {
-            const angle = (2 * Math.PI * index) / Math.max(1, totalNodes);
-            const x = radius * Math.cos(angle);
-            const z = radius * Math.sin(angle);
-            const y = 0; // plano "chão" da visualização
 
-            const infectedTime = tempos[id]; // pode ser 0, número ou Infinity
-            const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
+        // Se a topologia for uma estrela, aplicamos um layout especial:
+        // - nó central (maior grau) no (0, 0, 0)
+        // - demais nós em círculo ao redor
+        const topo = (this.topologia || '').toLowerCase();
+        const ehEstrela = topo.startsWith('estrela');
 
-            const isInfectedStart = Array.isArray(this.dispositivosInfectados)
-                ? this.dispositivosInfectados.includes(id)
-                : false;
+        if (ehEstrela && totalNodes > 0) {
+            // Descobrir o nó central: aquele com maior número de conexões
+            let central = vertices[0];
+            let maxGrau = this.conexoes(central);
 
-            nodes.push({
-                id,
-                x,
-                y,
-                z,
-                infectedTime,
-                isInfectedStart,
-                isReachable
+            for (const v of vertices) {
+                const grau = this.conexoes(v);
+                if (grau > maxGrau) {
+                    maxGrau = grau;
+                    central = v;
+                }
+            }
+
+            // Configuração geométrica
+            const radius = Math.max(20, totalNodes * 4); // distância do centro
+            const outros = vertices.filter(v => v !== central);
+
+            // Primeiro, adiciona o nó central
+            {
+                const id = central;
+                const infectedTime = tempos[id];
+                const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
+                const isInfectedStart = Array.isArray(this.dispositivosInfectados)
+                    ? this.dispositivosInfectados.includes(id)
+                    : false;
+
+                nodes.push({
+                    id,
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    infectedTime,
+                    isInfectedStart,
+                    isReachable
+                });
+            }
+
+            // Depois, distribui os demais em um círculo
+            outros.forEach((id, index) => {
+                const angle = (2 * Math.PI * index) / Math.max(1, outros.length);
+                const x = radius * Math.cos(angle);
+                const z = radius * Math.sin(angle);
+                const y = 0;
+
+                const infectedTime = tempos[id];
+                const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
+                const isInfectedStart = Array.isArray(this.dispositivosInfectados)
+                    ? this.dispositivosInfectados.includes(id)
+                    : false;
+
+                nodes.push({
+                    id,
+                    x,
+                    y,
+                    z,
+                    infectedTime,
+                    isInfectedStart,
+                    isReachable
+                });
             });
-        });
+
+        } else {
+            // Layout genérico: todos os nós em círculo
+            const radius = Math.max(20, totalNodes * 4);      // raio mínimo 20, cresce com a quantidade
+            vertices.forEach((id, index) => {
+                const angle = (2 * Math.PI * index) / Math.max(1, totalNodes);
+                const x = radius * Math.cos(angle);
+                const z = radius * Math.sin(angle);
+                const y = 0; // plano "chão" da visualização
+
+                const infectedTime = tempos[id]; // pode ser 0, número ou Infinity
+                const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
+
+                const isInfectedStart = Array.isArray(this.dispositivosInfectados)
+                    ? this.dispositivosInfectados.includes(id)
+                    : false;
+
+                nodes.push({
+                    id,
+                    x,
+                    y,
+                    z,
+                    infectedTime,
+                    isInfectedStart,
+                    isReachable
+                });
+            });
+        }
 
         // Construir links (aresta não-direcionada; evitar duplicar A-B e B-A)
         const links = [];
