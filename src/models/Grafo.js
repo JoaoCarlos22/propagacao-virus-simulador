@@ -226,8 +226,9 @@ class Grafo {
 
     // calcula o tempo medio total de infeccao
     calcularMediaTempo() {
-        const tempos = this.calcularTemposInfeccao();          // { A: 0, B: 5, ... }
-        const valores = Object.values(tempos);                 // [0, 5, ...]
+        const tempos = this.calcularTemposInfeccao();   // { A: 0, B: 5, ... }
+        const valores = Object.values(tempos);          // [0, 5, ...]
+
         if (valores.length === 0) return 0;
         const somaTempos = valores.reduce((acc, val) => acc + val, 0);
         return somaTempos / valores.length;
@@ -237,7 +238,9 @@ class Grafo {
     calcularMinimoTempo() {
         const tempos = this.calcularTemposInfeccao();
         const valores = Object.values(tempos);
+
         if (valores.length === 0) return 0;
+
         return Math.max(...valores);
     }
 
@@ -245,24 +248,24 @@ class Grafo {
         const tempos = this.calcularTemposInfeccao();   // { A: 0, B: 5, ... }
         let listaDispositivos = [];
 
-        // cria um array de tuplas [dispositivo, tempo] baseado no mapa
+        // monta [dispositivo, tempo] de forma explícita
         for (const dispositivo of this.vertices()) {
             const tempo = tempos[dispositivo];
             listaDispositivos.push([dispositivo, tempo]);
         }
 
-        // filtra quaisquer nós inalcançáveis (tempo infinito)
+        // filtra nós inalcançáveis (tempo infinito)
         listaDispositivos = listaDispositivos.filter(
             ([, tempo]) => tempo !== Infinity
         );
-        
-        // ordena o array com base no tempo de infecção (ascendente)
-        listaDispositivos.sort((a, b) => a[1] - b[1]); 
-        
-        // mapeia para obter apenas a sequência de nomes dos dispositivos
+
+        // ordena pelo tempo de infecção (ascendente)
+        listaDispositivos.sort((a, b) => a[1] - b[1]);
+
+        // só os nomes na ordem
         const sequencia = listaDispositivos.map(([dispositivo]) => dispositivo);
 
-        // formata o resultado para um insight claro
+        // string bonitinha
         const sequenciaFormatada = listaDispositivos
             .map(([dispositivo, tempo]) => `${dispositivo} (${tempo}h)`)
             .join(' → ');
