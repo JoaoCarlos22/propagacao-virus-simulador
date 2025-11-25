@@ -71,6 +71,90 @@ class Grafo {
         this._resetTemposCache();
     }
 
+    // verifica se existe uma aresta entre u e v (grafo não-direcionado)
+    temAresta(u, v) {
+        const entry = this.adj.get(u);
+        if (!entry) return false;
+        return entry.arestas.some(a => a.to === v);
+    }
+
+    // obtém informações da aresta entre u e v (no sentido u -> v)
+    // retorna { from, to, peso } ou null se não existir
+    getAresta(u, v) {
+        const entry = this.adj.get(u);
+        if (!entry) return null;
+
+        const found = entry.arestas.find(a => a.to === v);
+        if (!found) return null;
+
+        return {
+            from: u,
+            to: v,
+            peso: found.peso
+        };
+    }
+
+    // remove a aresta entre u e v (grafo não-direcionado)
+    // retorna true se alguma aresta foi removida, false caso contrário
+    removerAresta(u, v) {
+        let removed = false;
+
+        const entryU = this.adj.get(u);
+        if (entryU) {
+            const antes = entryU.arestas.length;
+            entryU.arestas = entryU.arestas.filter(a => a.to !== v);
+            if (entryU.arestas.length < antes) {
+                removed = true;
+            }
+        }
+
+        const entryV = this.adj.get(v);
+        if (entryV) {
+            const antes = entryV.arestas.length;
+            entryV.arestas = entryV.arestas.filter(a => a.to !== u);
+            if (entryV.arestas.length < antes) {
+                removed = true;
+            }
+        }
+
+        if (removed) {
+            this._resetTemposCache(); // tempos de infecção mudam quando a topologia muda
+        }
+
+        return removed;
+    }
+
+    // lista todas as arestas do grafo (não-direcionado), sem duplicatas
+    // retorna array de objetos { source, target, weight }
+    listarArestas() {
+        const arestas = [];
+        const vistos = new Set();
+
+        for (const [from, entry] of this.adj.entries()) {
+            const lista = entry.arestas || [];
+            for (const a of lista) {
+                const to = a.to;
+                const peso = a.peso;
+
+                // normaliza o par para evitar duplicatas (A|B == B|A)
+                const aId = String(from);
+                const bId = String(to);
+                const key = aId < bId ? `${aId}|${bId}` : `${bId}|${aId}`;
+
+                if (vistos.has(key)) continue;
+                vistos.add(key);
+
+                arestas.push({
+                    source: from,
+                    target: to,
+                    weight: peso
+                });
+            }
+        }
+
+        return arestas;
+    }
+
     // remove um dispositivo e todas as suas conexões
     deletarDispositivo(dispositivo) {
         // Se o dispositivo não existir, não há nada a remover
