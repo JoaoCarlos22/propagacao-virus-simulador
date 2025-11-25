@@ -108,6 +108,13 @@ class Grafo {
         // grafo mudou → invalida cache de tempos
         this._resetTemposCache();
 
+        // 👇 Task 3: marca se não sobrou nenhum infectado inicial
+        // (útil para frontend/histórico detectar "grafo sem sementes")
+        if (Array.isArray(this.dispositivosInfectados) &&
+            this.dispositivosInfectados.length === 0) {
+            this._semInfectadosIniciais = true;
+        }
+
         // Retorna true indicando que a remoção foi feita com sucesso
         return true;
     }
@@ -226,22 +233,28 @@ class Grafo {
 
     // calcula o tempo medio total de infeccao
     calcularMediaTempo() {
-        const tempos = this.calcularTemposInfeccao();   // { A: 0, B: 5, ... }
-        const valores = Object.values(tempos);          // [0, 5, ...]
+        const tempos = this.calcularTemposInfeccao();   // { A: 0, B: 5, C: Infinity, ... }
+        const valores = Object.values(tempos);
 
-        if (valores.length === 0) return 0;
-        const somaTempos = valores.reduce((acc, val) => acc + val, 0);
-        return somaTempos / valores.length;
+        // filtra só os tempos finitos (nós realmente infectados)
+        const finitos = valores.filter(v => v !== Infinity);
+
+        // se não houver nenhum nó com tempo finito, não houve propagação
+        if (finitos.length === 0) return 0;
+
+        const somaTempos = finitos.reduce((acc, val) => acc + val, 0);
+        return somaTempos / finitos.length;
     }
 
     // calcula o tempo minimo total de infeccao
     calcularMinimoTempo() {
         const tempos = this.calcularTemposInfeccao();
         const valores = Object.values(tempos);
+        const finitos = valores.filter(v => v !== Infinity);
 
-        if (valores.length === 0) return 0;
+        if (finitos.length === 0) return 0;
 
-        return Math.max(...valores);
+        return Math.max(...finitos);
     }
 
     sequenciaInfeccao() {
@@ -280,6 +293,12 @@ class Grafo {
     exibirTempoContagio() {
         const horasTotais = this.calcularMinimoTempo();
         const horaMedia = this.calcularMediaTempo();
+
+        // Caso especial: sem infectados iniciais ou nenhum nó alcançável
+        if (horasTotais === 0 && horaMedia === 0) {
+            return '\nNenhum dispositivo será infectado: ' +
+                   'não há dispositivos infectados iniciais ou não há caminhos válidos.';
+        }
 
         const formatHoras = (horas) => {
             if (horas === Infinity || Number.isNaN(horas)) return 'infinito';
