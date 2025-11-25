@@ -147,6 +147,57 @@ class Grafo {
         return somaPesos / conexoes;
     }
 
+    // Retorna informações consolidadas sobre um dispositivo (vértice) do grafo
+    infoDispositivo(dispositivo) {
+        const entry = this.adj.get(dispositivo);
+
+        // se o vértice não existe, devolve um objeto "vazio" mas informativo
+        if (!entry) {
+            return {
+                id: dispositivo,
+                existe: false,
+                grau: 0,
+                resistenciaMedia: 0,
+                infectadoInicial: false,
+                tempoInfeccao: Infinity,
+                alcancavel: false,
+                vizinhos: []
+            };
+        }
+
+        // grau = número de arestas
+        const grau = entry.arestas.length;
+
+        // vizinhos = lista única de ids conectados a partir deste dispositivo
+        const vizinhos = entry.arestas.map(a => a.to);
+
+        // já temos resistenciaMedia otimizada na Task 5
+        const resistenciaMedia = this.resistenciaMedia(dispositivo);
+
+        // infectado inicial? (seed)
+        const infectadoInicial = Array.isArray(this.dispositivosInfectados)
+            ? this.dispositivosInfectados.includes(dispositivo)
+            : false;
+
+        // tempo de infecção usando o mapa de tempos (Task 2 + Patch 3)
+        const tempos = this.calcularTemposInfeccao(); // { A: 0, B: 5, ... }
+        const tempoInfeccao = tempos[dispositivo];
+
+        // alcancavel = tem um tempo finito
+        const alcancavel = tempoInfeccao !== undefined && tempoInfeccao !== Infinity;
+
+        return {
+            id: dispositivo,
+            existe: true,
+            grau,
+            resistenciaMedia,
+            infectadoInicial,
+            tempoInfeccao,
+            alcancavel,
+            vizinhos
+        };
+    }
+
     dispositivosVulneraveis() {
         const vulneraveis = [];
 
