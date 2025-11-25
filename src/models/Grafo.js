@@ -432,6 +432,96 @@ class Grafo {
         };
     }
 
+    // Gera um payload no formato esperado pela interface 3D (script.js)
+    toFrontendSimulation(metaOverride = {}) {
+        const vertices = this.vertices();                 // lista de ids dos nós
+        const tempos = this.calcularTemposInfeccao();     // { id: tempo }
+        const totalNodes = vertices.length;
+
+        // layout simples: nós distribuídos em círculo no plano XZ
+        const nodes = [];
+        const radius = Math.max(20, totalNodes * 4);      // raio mínimo 20, cresce com a quantidade
+        vertices.forEach((id, index) => {
+            const angle = (2 * Math.PI * index) / Math.max(1, totalNodes);
+            const x = radius * Math.cos(angle);
+            const z = radius * Math.sin(angle);
+            const y = 0; // plano "chão" da visualização
+
+            const infectedTime = tempos[id]; // pode ser 0, número ou Infinity
+            const isReachable = infectedTime !== undefined && infectedTime !== Infinity;
+
+            const isInfectedStart = Array.isArray(this.dispositivosInfectados)
+                ? this.dispositivosInfectados.includes(id)
+                : false;
+
+            nodes.push({
+                id,
+                x,
+                y,
+                z,
+                infectedTime,
+                isInfectedStart,
+                isReachable
+            });
+        });
+
+        // Construir links (aresta não-direcionada; evitar duplicar A-B e B-A)
+        const links = [];
+        const vistos = new Set();
+
+        for (const [from, entry] of this.adj.entries()) {
+            const arestas = entry.arestas || [];
+            for (const aresta of arestas) {
+                const to = aresta.to;
+                const peso = aresta.peso;
+
+                // normalizar par (from, to) para evitar duplicata
+                const a = String(from);
+                const b = String(to);
+                const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+
+                if (vistos.has(key)) continue;
+                vistos.add(key);
+
+                links.push({
+                    source: from,
+                    target: to,
+                    weight: peso
+                });
+            }
+        }
+
+        // métricas globais usando os tempos já cacheados
+        const valoresTempos = Object.values(tempos);
+        const finitos = valoresTempos.filter(v => v !== Infinity);
+
+        const maxTime = finitos.length === 0
+            ? 0
+            : Math.max(...finitos);
+
+        const averageTime = finitos.length === 0
+            ? 0
+            : finitos.reduce((acc, v) => acc + v, 0) / finitos.length;
+
+        const reachableNodes = nodes.filter(n => n.isReachable).length;
+
+        // meta padrão, com possibilidade de override
+        const meta = {
+            topology: this.topologia || metaOverride.topology || null,
+            totalNodes,
+            reachableNodes,
+            maxTime: Number.isFinite(maxTime) ? maxTime : null,
+            averageTime: Number.isFinite(averageTime) ? averageTime : null,
+            ...metaOverride // permite sobrescrever campos se necessário
+        };
+
+        return {
+            meta,
+            nodes,
+            links
+        };
+    }
+
 }
 
 export default Grafo;
