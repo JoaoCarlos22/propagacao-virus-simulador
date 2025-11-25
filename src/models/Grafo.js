@@ -55,28 +55,42 @@ class Grafo {
 
     // remove um dispositivo e todas as suas conexões
     deletarDispositivo(dispositivo) {
-        // se o dispositivo não existir, nada a fazer
-        if (!this.adj.has(dispositivo)) return;
-
-        // remover o dispositivo da lista de infectados, se presente
-        if (Array.isArray(this.dispositivosInfectados)) {
-            this.dispositivosInfectados = this.dispositivosInfectados.filter(d => d !== dispositivo);
+        // Se o dispositivo não existir, não há nada a remover
+        if (!this.adj.has(dispositivo)) {
+            return false; // indica que nada foi removido
         }
 
+        // Remove o dispositivo da lista de infectados, se estiver lá
+        if (Array.isArray(this.dispositivosInfectados)) {
+            this.dispositivosInfectados = this.dispositivosInfectados.filter(
+                d => d !== dispositivo
+            );
+        }
+
+        // Pega os vizinhos diretamente a partir das arestas desse dispositivo
         const entry = this.adj.get(dispositivo);
         const vizinhos = entry ? entry.arestas.map(a => a.to) : [];
 
-        // remover todas as arestas que apontam para o dispositivo a ser removido
+        // Para cada vizinho, remove a aresta que aponta para o dispositivo removido
         for (const vizinho of vizinhos) {
-            if (!this.adj.has(vizinho)) continue; // proteção caso vértice vizinho já tenha sido removido
-            const arestasVizinho = this.adj.get(vizinho).arestas;
-            this.adj.get(vizinho).arestas = arestasVizinho.filter(a => a.to !== dispositivo);
+            const dadosVizinho = this.adj.get(vizinho);
+            if (!dadosVizinho) continue; // proteção extra
+
+            dadosVizinho.arestas = dadosVizinho.arestas.filter(
+                a => a.to !== dispositivo
+            );
         }
+
+        // Remove o dispositivo do mapa de adjacência
         this.adj.delete(dispositivo);
-        if (this.numDispositivos > 0) {
-            this.numDispositivos--;
-        }
+
+        // Atualiza o contador total de dispositivos para manter consistência
+        this.numDispositivos = this.adj.size;
+
+        // Retorna true indicando que a remoção foi feita com sucesso
+        return true;
     }
+
 
     vertices() {
         return Array.from(this.adj.keys());
@@ -271,16 +285,18 @@ class Grafo {
         return topo.join('\n') + '\n' + corpo;
     }
 
-    // --- Exportar resultado da simulação como JSON ---
+    // Gera um objeto puro pronto pra virar JSON (sem mexer com fs)
     toSimulationResult(meta = {}) {
+        // pegar sequência de infecção
         const { sequencia } = this.sequenciaInfeccao();
 
         return {
             meta: {
-                tipoSimulacao: meta.tipoSimulacao || 'mono',
+                // metadados da execução (vem de fora)
+                tipoSimulacao: meta.tipoSimulacao || 'mono',     // 'mono' | 'multi'
                 arquivoOrigem: meta.arquivoOrigem || null,
                 dataExecucao: meta.dataExecucao || new Date().toISOString(),
-                ...meta.extra
+                ...meta.extra,                                   // espaço pra mais coisas no futuro
             },
             grafo: {
                 topologia: this.topologia,
@@ -291,7 +307,7 @@ class Grafo {
                 tempoTotalHoras: this.calcularMinimoTempo(),
                 tempoMedioHoras: this.calcularMediaTempo(),
                 sequenciaInfeccao: sequencia,
-                dispositivosVulneraveis: this.dispositivosVulneraveis()
+                dispositivosVulneraveis: this.dispositivosVulneraveis(),
             }
         };
     }
