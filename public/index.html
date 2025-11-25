@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Propagação de Vírus - Visualização 3D</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+        }
+
+        #canvas3d {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 350px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            #ui-overlay {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: calc(100vw - 20px);
+                padding: 15px;
+            }
+        }
+
+        #ui-overlay h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #00ff88;
+            padding-bottom: 8px;
+        }
+
+        #ui-overlay label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        select, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #222;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:hover, select:focus {
+            border-color: #00ff88;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00ff88, #00cc6f);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #00cc6f, #00aa5c);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 255, 136, 0.3);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tab-btn {
+            background: #333;
+            border: 1px solid #444;
+            color: #aaa;
+            font-weight: normal;
+            margin: 0;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #00ff88, #00cc6f);
+            color: #000;
+            font-weight: bold;
+            border-color: #00ff88;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #444;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .tab-content {
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        input[type="number"], input[type="text"] {
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .network-config {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #333;
+        }
+
+        .network-config h5 {
+            font-size: 12px;
+            color: #00ff88;
+            margin-bottom: 8px;
+        }
+
+        .network-config label {
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .network-config select,
+        .network-config input {
+            font-size: 12px;
+            padding: 6px;
+            margin: 3px 0;
+        }
+
+        #tab-multi {
+            scrollbar-width: none;      /* Firefox */
+            -ms-overflow-style: none;   /* IE/Edge antigo */
+        }
+        #tab-multi::-webkit-scrollbar {
+            display: none;              /* Chrome, Safari, Edge moderno */
+        }
+
+        #status-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 250px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            #status-panel {
+                top: auto;
+                bottom: 200px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                padding: 15px;
+            }
+        }
+
+        #status-panel h4 {
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 2px solid #ff6b6b;
+            padding-bottom: 8px;
+        }
+
+        #status-panel p {
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        #status-panel span {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        #controls-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            #controls-panel {
+                left: 10px;
+                right: 10px;
+                min-width: auto;
+                padding: 12px;
+            }
+        }
+
+        #controls-panel h4 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 10px;
+        }
+
+        .control-row label {
+            flex: 1;
+            font-size: 12px;
+        }
+
+        .control-row input[type="range"] {
+            flex: 2;
+        }
+
+        .control-row button {
+            flex: 1;
+            margin: 0;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            #legend {
+                bottom: auto;
+                top: auto;
+                right: 10px;
+                left: auto;
+                padding: 12px;
+                font-size: 11px;
+            }
+            
+            #legend .legend-item {
+                font-size: 11px;
+            }
+        }
+
+        #legend h4 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 10px;
+            font-size: 18px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #00ff88;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto 0;
+        }
+
+        #progress-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 10px;
+            min-width: 500px;
+            max-width: 800px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            display: none;
+            z-index: 100;
+        }
+
+        @media (max-width: 1024px) {
+            #progress-panel {
+                min-width: 400px;
+                max-width: 600px;
+                padding: 15px 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #progress-panel {
+                left: 10px;
+                right: 10px;
+                bottom: 120px;
+                transform: none;
+                min-width: auto;
+                max-width: none;
+                padding: 15px;
+            }
+            
+            #timeline-container {
+                height: 60px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas3d"></div>
+    
+    <div id="ui-overlay">
+        <h3><i class="bi bi-virus"></i> Simulador de Propagação de Vírus</h3>
+        
+        <!-- Abas de Modo -->
+        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+            <button class="tab-btn active" data-tab="load" style="flex: 1; padding: 8px; font-size: 12px;"><i class="bi bi-folder-open"></i> <span class="btn-text">Carregar</span></button>
+            <button class="tab-btn" data-tab="generate" style="flex: 1; padding: 8px; font-size: 12px;"><i class="bi bi-stars"></i> <span class="btn-text">IA</span></button>
+            <button class="tab-btn" data-tab="multi" style="flex: 1; padding: 8px; font-size: 12px;"><i class="bi bi-diagram-3"></i> <span class="btn-text">Multi</span></button>
+            <button class="tab-btn" data-tab="edit" style="flex: 1; padding: 8px; font-size: 12px; display: none;"><i class="bi bi-pencil"></i> <span class="btn-text">Editar</span></button>
+        </div>
+
+        <!-- Tab: Carregar Instância Existente -->
+        <div id="tab-load" class="tab-content">
+            <label>Categoria:</label>
+            <select id="categorySelect">
+                <option value="all">Todas</option>
+                <option value="estrela">Estrela</option>
+                <option value="anel">Anel</option>
+                <option value="malha">Malha</option>
+                <option value="multiredes">Multi-redes</option>
+            </select>
+            <label>Arquivo:</label>
+            <select id="fileSelect">
+                <option value="">Selecione um arquivo...</option>
+            </select>
+            <button id="loadBtn"><i class="bi bi-rocket-takeoff"></i> Carregar e Simular</button>
+        </div>
+
+        <!-- Tab: Gerar Nova Instância com IA -->
+        <div id="tab-generate" class="tab-content" style="display: none;">
+            <label>Topologia:</label>
+            <select id="genTopology">
+                <option value="estrela"><i class="bi bi-star"></i> Estrela</option>
+                <option value="anel"><i class="bi bi-circle"></i> Anel</option>
+                <option value="malha"><i class="bi bi-grid-3x3"></i> Malha</option>
+            </select>
+            <label>Número de Vértices (5-30):</label>
+            <input type="number" id="genVertices" min="5" max="30" value="10" style="width: 100%; padding: 10px; background: #222; color: white; border: 1px solid #333; border-radius: 5px;">
+            <label>Dispositivos Infectados (1-N):</label>
+            <input type="number" id="genInfected" min="1" max="29" value="1" style="width: 100%; padding: 10px; background: #222; color: white; border: 1px solid #333; border-radius: 5px;">
+            <button id="generateBtn"><i class="bi bi-stars"></i> Gerar com IA</button>
+        </div>
+
+        <div id="tab-multi" class="tab-content" style="display: none; 
+            max-height: 600px; 
+            overflow-y: auto; 
+            padding-right: 5px;">
+            
+            <label>Número de Redes (2-5):</label>
+            <input type="number" id="multiNumRedes" min="2" max="5" value="2" 
+                style="width: 100%; padding: 10px; background: #222; color: white; 
+                border: 1px solid #333; border-radius: 5px;">
+
+            <div id="multiRedesConfig"></div>
+
+            <button id="generateMultiBtn">
+                <i class="bi bi-diagram-3"></i> Gerar Multi-Rede com IA
+            </button>
+        </div>
+
+
+        <!-- Tab: Editar Grafo -->
+        <!-- <div id="tab-edit" class="tab-content" style="display: none;">
+            <h4 style="font-size: 14px; margin-bottom: 10px;"><i class="bi bi-arrow-left-right"></i> Atualizar Peso de Aresta</h4>
+            <div style="display: flex; gap: 10px; justify-content: space-around; margin-bottom: 10px;">
+                <input type="text" id="editOrigin" placeholder="Origem" style="flex: 1; padding: 8px; background: #222; color: white; border: 1px solid #333; border-radius: 5px; font-size: 12px;">
+                <input type="text" id="editTarget" placeholder="Destino" style="flex: 1; padding: 8px; background: #222; color: white; border: 1px solid #333; border-radius: 5px; font-size: 12px;">
+            </div>
+            <input type="number" id="editWeight" placeholder="Novo Peso (0-10)" min="0" max="10" style="width: 100%; padding: 8px; background: #222; color: white; border: 1px solid #333; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+            <button id="updateWeightBtn" style="margin-top: 0;"><i class="bi bi-arrow-repeat"></i> Atualizar Peso</button>
+            
+            <h4 style="font-size: 14px; margin: 15px 0 10px 0;"><i class="bi bi-node-minus"></i> Remover Dispositivo</h4>
+            <input type="text" id="deleteNode" placeholder="ID do Dispositivo" style="width: 100%; padding: 8px; background: #222; color: white; border: 1px solid #333; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+            <button id="deleteNodeBtn" style="margin-top: 0; background: linear-gradient(135deg, #ff6b6b, #cc5555);"><i class="bi bi-trash"></i> Remover Dispositivo</button>
+        </div> -->
+
+        <!-- Tab: Editar Grafo -->
+        <div id="tab-edit" class="tab-content" style="display: none;">
+            <h4 style="font-size: 14px; margin-bottom: 10px;">
+                <i class="bi bi-arrow-left-right"></i> Atualizar Peso de Aresta
+            </h4>
+
+            <div style="display: flex; gap: 10px; justify-content: space-between; margin-bottom: 10px; width: 100%;">
+                <input type="text" id="editOrigin" placeholder="Origem"
+                    style="flex: 1 1 0; min-width: 0; box-sizing: border-box;
+                        padding: 8px; background: #222; color: white;
+                        border: 1px solid #333; border-radius: 5px; font-size: 12px;">
+
+                <input type="text" id="editTarget" placeholder="Destino"
+                    style="flex: 1 1 0; min-width: 0; box-sizing: border-box;
+                        padding: 8px; background: #222; color: white;
+                        border: 1px solid #333; border-radius: 5px; font-size: 12px;">
+            </div>
+
+            <input type="number" id="editWeight" placeholder="Novo Peso (0-10)" min="0" max="10"
+                style="width: 100%; padding: 8px; background: #222; color: white;
+                    border: 1px solid #333; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+
+            <button id="updateWeightBtn" style="margin-top: 0;">
+                <i class="bi bi-arrow-repeat"></i> Atualizar Peso
+            </button>
+            
+            <h4 style="font-size: 14px; margin: 15px 0 10px 0;">
+                <i class="bi bi-node-minus"></i> Remover Dispositivo
+            </h4>
+
+            <input type="text" id="deleteNode" placeholder="ID do Dispositivo"
+                style="width: 100%; padding: 8px; background: #222; color: white;
+                    border: 1px solid #333; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+
+            <button id="deleteNodeBtn"
+                style="margin-top: 0; background: linear-gradient(135deg, #ff6b6b, #cc5555);">
+                <i class="bi bi-trash"></i> Remover Dispositivo
+            </button>
+        </div>
+
+    </div>
+    
+    <div id="status-panel">
+        <h4><i class="bi bi-graph-up"></i> Status da Simulação</h4>
+        <p><i class="bi bi-clock"></i> Tempo: <span id="currentTime">0h</span></p>
+        <p><i class="bi bi-virus2"></i> Infectados: <span id="infectedCount">0</span> / <span id="totalNodes">0</span></p>
+        <p><i class="bi bi-diagram-2"></i> Topologia: <span id="topology">-</span></p>
+        <p><i class="bi bi-hourglass-split"></i> Tempo Máximo: <span id="maxTime">-</span></p>
+        <p><i class="bi bi-speedometer"></i> Tempo Médio: <span id="avgTime">-</span></p>
+    </div>
+
+    <div id="controls-panel" style="display: none;">
+        <h4><i class="bi bi-gear"></i> Controles</h4>
+        <div class="control-row">
+            <button id="playPauseBtn"><i class="bi bi-play-fill"></i> Play</button>
+            <button id="resetBtn"><i class="bi bi-arrow-clockwise"></i> Resetar</button>
+        </div>
+        <div class="control-row">
+            <label><i class="bi bi-speedometer2"></i> Velocidade: <span id="speedValue">1x</span></label>
+            <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1">
+        </div>
+    </div>
+
+    <div id="progress-panel" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); color: white; padding: 20px 25px; border-radius: 10px; min-width: 500px; max-width: 800px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); display: none;">
+        <h4 style="margin-bottom: 15px; font-size: 14px; text-align: center;"><i class="bi bi-graph-up-arrow"></i> Sequência de Propagação</h4>
+        <div id="timeline-container" style="position: relative; height: 80px; margin-bottom: 15px;">
+            <!-- SVG será inserido aqui dinamicamente -->
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+            <span style="font-size: 11px; color: #aaa; min-width: 40px;">0h</span>
+            <div id="progress-bar-container" style="flex: 1; height: 8px; background: #222; border-radius: 4px; overflow: hidden; border: 1px solid #444; position: relative;">
+                <div id="progress-bar-fill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #00ff88, #00cc6f); transition: width 0.3s ease; border-radius: 4px;"></div>
+            </div>
+            <span id="progress-max-time" style="font-size: 11px; color: #aaa; min-width: 40px; text-align: right;">0h</span>
+        </div>
+        <div id="progress-info" style="margin-top: 8px; font-size: 11px; text-align: center; color: #00ff88;"></div>
+    </div>
+
+    <div id="legend">
+        <h4><i class="bi bi-palette"></i> Legenda</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ff00;"></div>
+            <span>Não Infectado</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ffff00;"></div>
+            <span>Seed Inicial</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff0000;"></div>
+            <span>Infectado</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #666666;"></div>
+            <span>Inalcançável</span>
+        </div>
+    </div>
+
+    <div id="node-info-panel" style="position: absolute; top: 50%; right: 20px; transform: translateY(-50%); background: rgba(0, 0, 0, 0.9); color: white; padding: 20px; border-radius: 10px; min-width: 250px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); display: none; border: 2px solid #00ff88;">
+        <h4 style="margin-bottom: 12px; font-size: 16px; border-bottom: 2px solid #00ff88; padding-bottom: 8px;"><i class="bi bi-geo-alt"></i> Informações do Nó</h4>
+        <p style="margin: 8px 0; font-size: 13px;"><i class="bi bi-tag"></i> <strong>ID:</strong> <span id="nodeInfoId" style="color: #00ff88;">-</span></p>
+        <p style="margin: 8px 0; font-size: 13px;"><i class="bi bi-clock-history"></i> <strong>Tempo de Infecção:</strong> <span id="nodeInfoTime" style="color: #00ff88;">-</span></p>
+        <p style="margin: 8px 0; font-size: 13px;"><i class="bi bi-diagram-3"></i> <strong>Conexões:</strong> <span id="nodeInfoConnections" style="color: #00ff88;">-</span></p>
+        <p style="margin: 8px 0; font-size: 13px;"><i class="bi bi-info-circle"></i> <strong>Status:</strong> <span id="nodeInfoStatus" style="color: #00ff88;">-</span></p>
+        <button id="removeNodeBtn" style="margin-top: 15px; background: linear-gradient(135deg, #ff6b6b, #cc5555); color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold;"><i class="bi bi-trash"></i> Remover Dispositivo</button>
+    </div>
+
+    <div id="loading">
+        <div>Carregando simulação...</div>
+        <div class="spinner"></div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
