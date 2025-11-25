@@ -156,30 +156,8 @@ async function loadAndSimulate() {
             throw new Error(error.message || 'Erro ao carregar simulação');
         }
         
-        simulationData = await response.json();
-        
-        // Limpar cena anterior
-        clearScene();
-        
-        // Criar visualização
-        createVisualization(simulationData);
-        
-        // Resetar simulação
-        currentSimTime = 0;
-        isPlaying = false;
-        playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i> Play';
-        
-        // Atualizar status
-        updateStatusPanel();
-        
-        // Mostrar controles
-        controlsPanel.style.display = 'block';
-        
-        // Mostrar barra de progresso
-        initProgressBar();
-        
-        // Habilitar modo de edição
-        enableEditMode();
+        const payload = await response.json();
+        applySimulationPayload(payload);
         
     } catch (error) {
         console.error('Erro ao carregar simulação:', error);
@@ -932,6 +910,8 @@ let currentGraphData = null;
 const editTab = document.querySelector('[data-tab="edit"]');
 const updateWeightBtn = document.getElementById('updateWeightBtn');
 const deleteNodeBtn = document.getElementById('deleteNodeBtn');
+// Guardar label original do botão de atualizar peso (PATCH 2)
+const updateWeightBtnDefaultLabel = updateWeightBtn.innerHTML;
 
 // Mostrar aba de edição quando um grafo for carregado
 function enableEditMode() {
@@ -939,144 +919,188 @@ function enableEditMode() {
     currentGraphData = simulationData;
 }
 
-updateWeightBtn.addEventListener('click', async () => {
-    if (!currentGraphData) {
-        alert('Carregue um grafo primeiro!');
-        return;
-    }
-    
-    const origin = document.getElementById('editOrigin').value.trim().toUpperCase();
-    const target = document.getElementById('editTarget').value.trim().toUpperCase();
-    const weight = parseInt(document.getElementById('editWeight').value);
-    
-    if (!origin || !target) {
-        alert('Digite origem e destino');
-        return;
-    }
-    
-    if (isNaN(weight) || weight < 0 || weight > 10) {
-        alert('Peso deve estar entre 0 e 10');
-        return;
-    }
-    
-    // Verificar se os nós existem
-    const originNode = currentGraphData.nodes.find(n => n.id === origin);
-    const targetNode = currentGraphData.nodes.find(n => n.id === target);
-    
-    if (!originNode || !targetNode) {
-        alert('Dispositivo não encontrado no grafo');
-        return;
-    }
-    
-    // Atualizar peso localmente
-    const link = currentGraphData.links.find(l => 
-        (l.source === origin && l.target === target) || 
-        (l.source === target && l.target === origin)
-    );
-    
-    if (!link) {
-        alert('Aresta não encontrada entre esses dispositivos');
-        return;
-    }
-    
-    link.weight = weight;
-    
-    // Recarregar visualização
-    clearScene();
-    createVisualization(currentGraphData);
-    
-    alert(`Peso atualizado entre ${origin} e ${target} para ${weight}`);
-    
-    // Limpar inputs
-    document.getElementById('editOrigin').value = '';
-    document.getElementById('editTarget').value = '';
-    document.getElementById('editWeight').value = '';
-});
+// Centraliza a aplicação de payload de simulação (evita duplicação)
+function applySimulationPayload(payload) {
+    // Atualiza estado global
+    simulationData = payload;
+    currentGraphData = payload;
 
-deleteNodeBtn.addEventListener('click', () => {
-    if (!currentGraphData) {
-        alert('Carregue um grafo primeiro!');
-        return;
-    }
-    
-    const nodeId = document.getElementById('deleteNode').value.trim().toUpperCase();
-    
-    if (!nodeId) {
-        alert('Digite o ID do dispositivo');
-        return;
-    }
-    
-    const nodeIndex = currentGraphData.nodes.findIndex(n => n.id === nodeId);
-    
-    if (nodeIndex === -1) {
-        alert('Dispositivo não encontrado no grafo');
-        return;
-    }
-    
-    // Remover nó
-    currentGraphData.nodes.splice(nodeIndex, 1);
-    
-    // Remover arestas conectadas
-    currentGraphData.links = currentGraphData.links.filter(l => 
-        l.source !== nodeId && l.target !== nodeId
-    );
-    
-    // Atualizar meta
-    currentGraphData.meta.totalNodes = currentGraphData.nodes.length;
-    currentGraphData.meta.reachableNodes = currentGraphData.nodes.filter(n => n.isReachable).length;
-    
-    // Recarregar visualização
+    // Limpar cena anterior
     clearScene();
-    createVisualization(currentGraphData);
-    
-    alert(`Dispositivo ${nodeId} removido com sucesso`);
-    
-    // Limpar input
-    document.getElementById('deleteNode').value = '';
-    
+
+    // Criar visualização
+    createVisualization(payload);
+
     // Resetar simulação
     currentSimTime = 0;
     isPlaying = false;
     playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i> Play';
+
+    // Atualizar status/painéis
     updateStatusPanel();
+
+    // Mostrar e reinicializar barra de progresso
+    initProgressBar();
+
+    // Mostrar controles
+    controlsPanel.style.display = 'block';
+
+    // Garantir que a aba de edição esteja ligada
+    enableEditMode();
+}
+
+// Helper para remover um nó via API e aplicar o novo snapshot (PATCH 3)
+async function deleteNodeById(nodeId, source = 'edit') {
+    if (!simulationData) {
+        alert('Carregue um grafo primeiro!');
+        return;
+    }
+
+    nodeId = (nodeId || '').trim().toUpperCase();
+
+    if (!nodeId) {
+        alert('Digite o ID do dispositivo');
+        return;
+    }
+
+    if (!confirm(`Deseja realmente remover o dispositivo ${nodeId}?`)) {
+        return;
+    }
+
+    // Validação rápida no front
+    const nodes = simulationData.nodes || [];
+    const exists = nodes.some(n => n.id === nodeId);
+    if (!exists) {
+        alert('Dispositivo não encontrado no grafo atual');
+        return;
+    }
+
+    // Estado de loading
+    loading.style.display = 'block';
+    if (source === 'edit') {
+        deleteNodeBtn.disabled = true;
+    }
+
+    try {
+        const response = await fetch('/api/edit/node/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: nodeId })
+        });
+
+        if (!response.ok) {
+            let errMsg = 'Erro ao remover dispositivo no servidor';
+            try {
+                const errBody = await response.json();
+                if (errBody && errBody.message) errMsg = errBody.message;
+            } catch (_) {}
+            throw new Error(errMsg);
+        }
+
+        const payload = await response.json();
+        applySimulationPayload(payload);
+
+        alert(`Dispositivo ${nodeId} removido com sucesso.`);
+
+        if (source === 'edit') {
+            const deleteInput = document.getElementById('deleteNode');
+            if (deleteInput) deleteInput.value = '';
+        } else if (source === 'panel') {
+            const panel = document.getElementById('node-info-panel');
+            if (panel) panel.style.display = 'none';
+            selectedNode = null;
+        }
+    } catch (error) {
+        console.error('Erro ao remover dispositivo:', error);
+        alert(`Erro: ${error.message}`);
+    } finally {
+        loading.style.display = 'none';
+        if (source === 'edit') {
+            deleteNodeBtn.disabled = false;
+        }
+    }
+}
+
+updateWeightBtn.addEventListener('click', async () => {
+    if (!simulationData) {
+        alert('Carregue um grafo primeiro!');
+        return;
+    }
+
+    const originInput = document.getElementById('editOrigin');
+    const targetInput = document.getElementById('editTarget');
+    const weightInput = document.getElementById('editWeight');
+
+    const origin = originInput.value.trim().toUpperCase();
+    const target = targetInput.value.trim().toUpperCase();
+    const weight = parseInt(weightInput.value, 10);
+
+    if (!origin || !target) {
+        alert('Digite origem e destino');
+        return;
+    }
+
+    if (isNaN(weight) || weight < 0 || weight > 10) {
+        alert('Peso deve estar entre 0 e 10');
+        return;
+    }
+
+    // Validação rápida dos dispositivos
+    const nodes = simulationData.nodes || [];
+    const originNode = nodes.find(n => n.id === origin);
+    const targetNode = nodes.find(n => n.id === target);
+
+    if (!originNode || !targetNode) {
+        alert('Dispositivo não encontrado no grafo atual');
+        return;
+    }
+
+    try {
+        updateWeightBtn.disabled = true;
+        updateWeightBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Atualizando...';
+
+        const response = await fetch('/api/edit/edge/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: origin, to: target, peso: weight })
+        });
+
+        if (!response.ok) {
+            let errMsg = 'Erro ao atualizar aresta no servidor';
+            try {
+                const errBody = await response.json();
+                if (errBody && errBody.message) errMsg = errBody.message;
+            } catch (_) {}
+            throw new Error(errMsg);
+        }
+
+        const payload = await response.json();
+        applySimulationPayload(payload);
+
+        alert(`Peso atualizado entre ${origin} e ${target} para ${weight}`);
+
+        originInput.value = '';
+        targetInput.value = '';
+        weightInput.value = '';
+    } catch (error) {
+        console.error('Erro ao atualizar peso da aresta:', error);
+        alert(`Erro: ${error.message}`);
+    } finally {
+        updateWeightBtn.disabled = false;
+        updateWeightBtn.innerHTML = updateWeightBtnDefaultLabel || '<i class="bi bi-arrow-repeat"></i> Atualizar Peso';
+    }
+});
+
+deleteNodeBtn.addEventListener('click', () => {
+    const nodeId = document.getElementById('deleteNode').value;
+    deleteNodeById(nodeId, 'edit');
 });
 
 // Botão de remover nó do painel de informações
 document.getElementById('removeNodeBtn').addEventListener('click', () => {
     if (!selectedNode) return;
-    
     const nodeId = selectedNode.data.id;
-    
-    if (confirm(`Deseja realmente remover o dispositivo ${nodeId}?`)) {
-        const nodeIndex = currentGraphData.nodes.findIndex(n => n.id === nodeId);
-        
-        if (nodeIndex === -1) return;
-        
-        // Remover nó
-        currentGraphData.nodes.splice(nodeIndex, 1);
-        
-        // Remover arestas conectadas
-        currentGraphData.links = currentGraphData.links.filter(l => 
-            l.source !== nodeId && l.target !== nodeId
-        );
-        
-        // Atualizar meta
-        currentGraphData.meta.totalNodes = currentGraphData.nodes.length;
-        currentGraphData.meta.reachableNodes = currentGraphData.nodes.filter(n => n.isReachable).length;
-        
-        // Desselecion ar
-        deselectNode();
-        
-        // Recarregar visualização
-        clearScene();
-        createVisualization(currentGraphData);
-        
-        // Resetar simulação
-        currentSimTime = 0;
-        isPlaying = false;
-        playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i> Play';
-        updateStatusPanel();
-    }
+    deleteNodeById(nodeId, 'panel');
 });
 
 // Inicialização

@@ -1,0 +1,141 @@
+# Quantidade de redes: 3
+# Topologias das Redes: rede1: estrela, rede2: anel, rede3: malha
+# Número de vértices: rede1: 10, rede2: 10, rede3: 15
+# Número de dispositivos infectados: rede1: 1, rede2: 1, rede3: 1
+# Dispositivos infectados: rede1: A, rede2: K, rede3: V
+
+# rede 1
+# origem | destino | nivel de segurança
+A	B	5
+A	C	9
+A	D	3
+A	E	6
+A	F	1
+A	G	8
+A	H	2
+A	I	7
+A	J	4
+
+# aresta que conecta as redes
+C	K	6
+
+# rede 2
+# origem | destino | nivel de segurança
+K	L	10
+L	M	2
+M	N	7
+N	O	1
+O	P	5
+P	Q	9
+Q	R	3
+R	S	8
+S	T	4
+T	K	6
+
+# rede 3
+# origem | destino | nivel de segurança
+U	V	8
+U	W	1
+U	X	5
+U	Y	10
+U	Z	3
+U	AA	7
+U	AB	2
+U	AC	9
+U	AD	4
+U	AE	6
+U	AF	1
+U	AG	8
+U	AH	3
+U	AI	5
+V	W	9
+V	X	2
+V	Y	7
+V	Z	1
+V	AA	5
+V	AB	10
+V	AC	3
+V	AD	8
+V	AE	4
+V	AF	6
+V	AG	1
+V	AH	9
+V	AI	2
+W	X	7
+W	Y	1
+W	Z	5
+W	AA	10
+W	AB	3
+W	AC	8
+W	AD	4
+W	AE	6
+W	AF	1
+W	AG	9
+W	AH	2
+W	AI	7
+X	Y	10
+X	Z	3
+X	AA	8
+X	AB	4
+X	AC	6
+X	AD	1
+X	AE	9
+X	AF	2
+X	AG	7
+X	AH	5
+X	AI	10
+Y	Z	2
+Y	AA	7
+Y	AB	1
+Y	AC	5
+Y	AD	10
+Y	AE	3
+Y	AF	8
+Y	AG	4
+Y	AH	6
+Y	AI	1
+Z	AA	9
+Z	AB	2
+Z	AC	7
+Z	AD	1
+Z	AE	5
+Z	AF	10
+Z	AG	3
+Z	AH	8
+Z	AI	4
+AA	AB	6
+AA	AC	1
+AA	AD	9
+AA	AE	2
+AA	AF	7
+AA	AG	5
+AA	AH	10
+AA	AI	3
+AB	AC	8
+AB	AD	4
+AB	AE	6
+AB	AF	1
+AB	AG	9
+AB	AH	2
+AB	AI	7
+AC	AD	5
+AC	AE	10
+AC	AF	3
+AC	AG	8
+AC	AH	4
+AC	AI	6
+AD	AE	1
+AD	AF	9
+AD	AG	2
+AD	AH	7
+AD	AI	5
+AE	AF	10
+AE	AG	3
+AE	AH	8
+AE	AI	4
+AF	AG	6
+AF	AH	1
+AF	AI	9
+AG	AH	2
+AG	AI	7
+AH	AI	5

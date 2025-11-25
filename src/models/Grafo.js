@@ -22,18 +22,38 @@ class Grafo {
     }
 
     // Garantir que um vértice exista na lista de adjacência
-    _validar(vertice) {
-        // verificar se o vértice é o vértice infectado
-        const infectado = (this.dispositivosInfectados && this.dispositivosInfectados.includes(vertice)) ? true : false;
-        if (!this.adj.has(vertice)) {
+    // criar = true (padrão) → cria o vértice se não existir
+    // criar = false         → apenas verifica, sem criar nada
+    _validar(vertice, criar = true) {
+        const jaExiste = this.adj.has(vertice);
+
+        if (!jaExiste && !criar) {
+            // modo "somente validar": não cria vértice novo
+            return false;
+        }
+
+        if (!jaExiste) {
+            // verificar se o vértice é infectado inicial
+            const infectado = (
+                this.dispositivosInfectados &&
+                this.dispositivosInfectados.includes(vertice)
+            ) ? true : false;
+
             this.adj.set(vertice, { arestas: [], infectado });
             this._recontarDispositivos();
         }
+
+        return true;
     }
 
     // invalida o cache dos tempos de infecção sempre que o grafo for modificado
     _resetTemposCache() {
         this._temposInfeccaoCache = null;
+    }
+
+    // verifica se um vértice existe no grafo (sem criar nada)
+    existe(vertice) {
+        return this.adj.has(vertice);
     }
 
     addAresta(u, v, peso) {
@@ -212,8 +232,9 @@ class Grafo {
 
     // calcula o grau de um dispositivo
     conexoes(dispositivo) {
-        this._validar(dispositivo);
-        return this.adj.get(dispositivo).arestas.length;
+        const entry = this.adj.get(dispositivo);
+        if (!entry) return 0;
+        return entry.arestas.length;
     }
 
     // calcula a resistencia media de um dispositivo (soma dos pesos / grau)
