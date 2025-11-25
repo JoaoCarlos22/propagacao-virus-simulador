@@ -22,7 +22,10 @@ class Grafo {
     _validar(vertice) {
         // verificar se o vértice é o vértice infectado
         const infectado = (this.dispositivosInfectados && this.dispositivosInfectados.includes(vertice)) ? true : false;
-        if (!this.adj.has(vertice)) this.adj.set(vertice, { arestas: [], infectado });
+        if (!this.adj.has(vertice)) {
+            this.adj.set(vertice, { arestas: [], infectado });
+            this._recontarDispositivos();
+        }
     }
 
     addAresta(u, v, peso) {
@@ -30,6 +33,7 @@ class Grafo {
         this._validar(v);
         this.adj.get(u).arestas.push({ to: v, peso });
         this.adj.get(v).arestas.push({ to: u, peso });
+        this._recontarDispositivos();
     }
 
     // atualiza o peso de uma aresta existente
@@ -85,7 +89,7 @@ class Grafo {
         this.adj.delete(dispositivo);
 
         // Atualiza o contador total de dispositivos para manter consistência
-        this.numDispositivos = this.adj.size;
+        this._recontarDispositivos();
 
         // Retorna true indicando que a remoção foi feita com sucesso
         return true;
@@ -94,6 +98,10 @@ class Grafo {
 
     vertices() {
         return Array.from(this.adj.keys());
+    }
+
+    _recontarDispositivos() {
+        this.numDispositivos = this.adj.size;
     }
 
     // calcula o grau de um dispositivo
