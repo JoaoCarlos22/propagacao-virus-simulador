@@ -188,35 +188,41 @@ class Grafo {
 
     // calcula o tempo medio total de infeccao
     calcularMediaTempo() {
-        const tempos = this.calcularTemposInfeccao();
-        const somaTempos = tempos.reduce((acc, val) => acc + val, 0);
-        return somaTempos / this.numDispositivos;
+        const tempos = this.calcularTemposInfeccao();          // { A: 0, B: 5, ... }
+        const valores = Object.values(tempos);                 // [0, 5, ...]
+        if (valores.length === 0) return 0;
+        const somaTempos = valores.reduce((acc, val) => acc + val, 0);
+        return somaTempos / valores.length;
     }
 
     // calcula o tempo minimo total de infeccao
     calcularMinimoTempo() {
         const tempos = this.calcularTemposInfeccao();
-        return Math.max(...tempos);
+        const valores = Object.values(tempos);
+        if (valores.length === 0) return 0;
+        return Math.max(...valores);
     }
 
     sequenciaInfeccao() {
-        const tempos = this.calcularTemposInfeccao();
+        const tempos = this.calcularTemposInfeccao();   // { A: 0, B: 5, ... }
         let listaDispositivos = [];
-        const vertices = this.vertices();
 
-        // cria um array de tuplas [dispositivo, tempo]
-        for (let i = 0; i < vertices.length; i++) {
-            listaDispositivos.push([vertices[i], tempos[i]]);
+        // cria um array de tuplas [dispositivo, tempo] baseado no mapa
+        for (const dispositivo of this.vertices()) {
+            const tempo = tempos[dispositivo];
+            listaDispositivos.push([dispositivo, tempo]);
         }
 
         // filtra quaisquer nós inalcançáveis (tempo infinito)
-        listaDispositivos = listaDispositivos.filter(([dispositivo, tempo]) => tempo !== Infinity);
+        listaDispositivos = listaDispositivos.filter(
+            ([, tempo]) => tempo !== Infinity
+        );
         
         // ordena o array com base no tempo de infecção (ascendente)
         listaDispositivos.sort((a, b) => a[1] - b[1]); 
         
         // mapeia para obter apenas a sequência de nomes dos dispositivos
-        const sequencia = listaDispositivos.map(([dispositivo, tempo]) => dispositivo);
+        const sequencia = listaDispositivos.map(([dispositivo]) => dispositivo);
 
         // formata o resultado para um insight claro
         const sequenciaFormatada = listaDispositivos
@@ -224,9 +230,9 @@ class Grafo {
             .join(' → ');
 
         return {
-            sequencia: sequencia,
-            sequenciaFormatada: sequenciaFormatada
-        }
+            sequencia,
+            sequenciaFormatada
+        };
     }
 
     // exibe o tempo total e minimo de contágio
