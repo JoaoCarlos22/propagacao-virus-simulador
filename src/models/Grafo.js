@@ -270,6 +270,32 @@ class Grafo {
             .join('\n');
         return topo.join('\n') + '\n' + corpo;
     }
+
+    // --- Exportar resultado da simulação como JSON ---
+    toSimulationResult(meta = {}) {
+        const { sequencia } = this.sequenciaInfeccao();
+
+        return {
+            meta: {
+                tipoSimulacao: meta.tipoSimulacao || 'mono',
+                arquivoOrigem: meta.arquivoOrigem || null,
+                dataExecucao: meta.dataExecucao || new Date().toISOString(),
+                ...meta.extra
+            },
+            grafo: {
+                topologia: this.topologia,
+                numDispositivos: this.numDispositivos ?? this.vertices().length,
+                dispositivosInfectados: Array.isArray(this.dispositivosInfectados)
+                    ? [...this.dispositivosInfectados]
+                    : [],
+                tempoTotalHoras: this.calcularMinimoTempo(),
+                tempoMedioHoras: this.calcularMediaTempo(),
+                sequenciaInfeccao: sequencia,
+                dispositivosVulneraveis: this.dispositivosVulneraveis()
+            }
+        };
+    }
+
 }
 
 export default Grafo;

@@ -1,6 +1,7 @@
 import { readdirSync, existsSync } from 'fs';
 import { gerarInstancia1, gerarInstancia2 } from './gerarInstancia.js';
 import { exibirGrafo } from './services/buildMonoGrafo.js';
+import { salvarSimulacaoJSON } from './historyService.js';
 
 // opções do menu
 function carregarOpcoes() {
@@ -192,6 +193,11 @@ export async function menu3(grafo, rl) {
             grafo.atualizarAresta(u, v, Number(novoPeso));
             console.log(`Peso atualizado entre ${u} e ${v} para ${novoPeso}.`);
             exibirGrafo(grafo);
+            salvarSimulacaoJSON(grafo, {
+                tipoSimulacao: 'edicao',
+                arquivoOrigem: 'interativo-cli',
+                extra: { acao: 'atualizar-aresta', u, v, novoPeso: Number(novoPeso) }
+            });
         } else if (escolha === '2') {
             const dispositivo = (await prompt(rl, 'Dispositivo a remover (letra): ')).trim();
             if (!grafo.vertices().includes(dispositivo)) {
@@ -200,6 +206,11 @@ export async function menu3(grafo, rl) {
                 grafo.deletarDispositivo(dispositivo);
                 console.log(`Dispositivo ${dispositivo} removido.`);
                 exibirGrafo(grafo);
+                salvarSimulacaoJSON(grafo, {
+                    tipoSimulacao: 'edicao',
+                    arquivoOrigem: 'interativo-cli',
+                    extra: { acao: 'remover-dispositivo', dispositivo }
+                });
             }
         } else if (escolha === '3') {
             break;

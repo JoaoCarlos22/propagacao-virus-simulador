@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "tipoSimulacao": "mono",
+    "arquivoOrigem": "src/data/estrela/estrela10.txt",
+    "dataExecucao": "2025-11-25T05:52:31.450Z"
+  },
+  "grafo": {
+    "topologia": "estrela",
+    "numDispositivos": 10,
+    "dispositivosInfectados": [
+      "A"
+    ],
+    "tempoTotalHoras": 48,
+    "tempoMedioHoras": 17.5,
+    "sequenciaInfeccao": [
+      "A",
+      "I",
+      "E",
+      "C",
+      "G",
+      "J",
+      "B",
+      "F",
+      "D",
+      "H"
+    ],
+    "dispositivosVulneraveis": [
+      {
+        "dispositivo": "A",
+        "grau": 9,
+        "resistenciaMedia": 5.666666666666667
+      },
+      {
+        "dispositivo": "I",
+        "grau": 1,
+        "resistenciaMedia": 1
+      },
+      {
+        "dispositivo": "E",
+        "grau": 1,
+        "resistenciaMedia": 2
+      },
+      {
+        "dispositivo": "C",
+        "grau": 1,
+        "resistenciaMedia": 3
+      },
+      {
+        "dispositivo": "G",
+        "grau": 1,
+        "resistenciaMedia": 5
+      },
+      {
+        "dispositivo": "J",
+        "grau": 1,
+        "resistenciaMedia": 6
+      },
+      {
+        "dispositivo": "B",
+        "grau": 1,
+        "resistenciaMedia": 7
+      },
+      {
+        "dispositivo": "F",
+        "grau": 1,
+        "resistenciaMedia": 8
+      },
+      {
+        "dispositivo": "D",
+        "grau": 1,
+        "resistenciaMedia": 9
+      },
+      {
+        "dispositivo": "H",
+        "grau": 1,
+        "resistenciaMedia": 10
+      }
+    ]
+  }
+}
