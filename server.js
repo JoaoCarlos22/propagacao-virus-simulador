@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs/promises';
@@ -23,7 +22,12 @@ app.use(cors());
 app.use(express.json());
 
 // Servir arquivos estáticos da pasta public
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+// rota para servir index.html na raiz (arquivo movido para /)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'index.html'));
+});
 
 let currentGrafo = null;
 let currentSourceFile = null;
