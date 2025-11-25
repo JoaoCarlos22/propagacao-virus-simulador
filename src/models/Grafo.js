@@ -11,6 +11,9 @@ class Grafo {
         this.numDispositivos = numDispositivos || 0;
         // garantir array seguro para dispositivos infectados
         this.dispositivosInfectados = Array.isArray(dispoInfectados) ? [...dispoInfectados] : (dispoInfectados ? [...dispoInfectados] : []);
+
+        // cache interno dos tempos de infecção (para evitar recalcular Dijkstra toda hora)
+        this._temposInfeccaoCache = null;
     }
 
     // para cada nivel de peso é atribuido um tempo (hora) de contágio
@@ -28,12 +31,20 @@ class Grafo {
         }
     }
 
+    // invalida o cache dos tempos de infecção sempre que o grafo for modificado
+    _resetTemposCache() {
+        this._temposInfeccaoCache = null;
+    }
+
     addAresta(u, v, peso) {
         this._validar(u);
         this._validar(v);
         this.adj.get(u).arestas.push({ to: v, peso });
         this.adj.get(v).arestas.push({ to: u, peso });
         this._recontarDispositivos();
+
+        // grafo mudou → invalida cache de tempos
+        this._resetTemposCache();
     }
 
     // atualiza o peso de uma aresta existente
@@ -55,6 +66,9 @@ class Grafo {
         // Atualiza o peso em ambas as direções
         atualizarPeso(u, v, novoPeso);
         atualizarPeso(v, u, novoPeso);
+
+        // grafo mudou → invalida cache de tempos
+        this._resetTemposCache();
     }
 
     // remove um dispositivo e todas as suas conexões
@@ -90,6 +104,9 @@ class Grafo {
 
         // Atualiza o contador total de dispositivos para manter consistência
         this._recontarDispositivos();
+
+        // grafo mudou → invalida cache de tempos
+        this._resetTemposCache();
 
         // Retorna true indicando que a remoção foi feita com sucesso
         return true;
@@ -147,7 +164,7 @@ class Grafo {
     }
 
     // calcula o tempo de infeccao para cada dispositivo usando Dijkstra (agora suporta múltiplos infectados)
-    calcularTemposInfeccao() {
+    _calcularTemposInfeccaoBruto() {
         const tempos = {};
         const infectados = new Set();
         const fila = [];
@@ -190,6 +207,19 @@ class Grafo {
                 }
             }
         }
+        return tempos;
+    }
+
+    // wrapper público que usa cache interno para os tempos de infecção
+    calcularTemposInfeccao() {
+        // se já temos cache, reutiliza
+        if (this._temposInfeccaoCache !== null) {
+            return this._temposInfeccaoCache;
+        }
+
+        // caso contrário, calcula do zero e guarda no cache
+        const tempos = this._calcularTemposInfeccaoBruto();
+        this._temposInfeccaoCache = tempos;
         return tempos;
     }
 
