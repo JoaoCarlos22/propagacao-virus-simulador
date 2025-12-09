@@ -1,0 +1,13 @@
+# Topologia de Rede: estrela
+# Número de vértices: 11
+# Dispositivos infectados: G
+A	B	7
+A	C	2
+A	D	9
+A	E	4
+A	F	1
+A	G	8
+A	H	5
+A	I	10
+A	J	3
+A	K	6

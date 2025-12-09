@@ -1,0 +1,68 @@
+# Quantidade de redes: 2
+# Topologias das Redes: rede1: malha, rede2: estrela
+# Número de vértices: rede1: 10, rede2: 10
+# Número de dispositivos infectados: rede1: 1, rede2: 2
+# Dispositivos infectados: rede1: A, rede2: K, M
+#
+# rede 1
+# origem | destino | nivel de segurança
+A	B	3
+A	C	9
+A	D	5
+A	E	3
+A	F	9
+A	G	1
+A	H	10
+A	I	5
+A	J	8
+B	C	10
+B	D	9
+B	E	9
+B	F	1
+B	G	6
+B	H	8
+B	I	10
+B	J	1
+C	D	5
+C	E	7
+C	F	7
+C	G	1
+C	H	9
+C	I	1
+C	J	8
+D	E	6
+D	F	2
+D	G	7
+D	H	1
+D	I	1
+D	J	9
+E	F	2
+E	G	10
+E	H	7
+E	I	1
+E	J	9
+F	G	7
+F	H	10
+F	I	4
+F	J	8
+G	H	1
+G	I	7
+G	J	5
+H	I	2
+H	J	7
+I	J	2
+
+# aresta que conecta as redes
+J	K	6
+
+# rede 2
+# origem | destino | nivel de segurança
+K	L	1
+K	M	7
+K	N	4
+K	O	9
+K	P	3
+K	Q	3
+K	R	10
+K	S	8
+K	T	6

@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { buildGrafoFromText, exibirGrafo } from './services/buildMonoGrafo.js';
+import { salvarSimulacaoJSON } from './historyService.js';
 import {
     parseMultiRede,
     buildGrafosIndividuais,
@@ -18,6 +19,12 @@ export function carregarMultiRede(pathArquivo) {
     grafosIndividuais.forEach((grafo, idx) => {
         console.log(`\n=== Rede ${idx + 1} ===`);
         exibirGrafo(grafo);
+
+        salvarSimulacaoJSON(grafo, {
+            tipoSimulacao: 'multi-rede-individual',
+            arquivoOrigem: pathArquivo,
+            extra: { redeIndex: idx + 1 }
+        });
     });
 
     // Exibir conexões entre redes
@@ -30,6 +37,11 @@ export function carregarMultiRede(pathArquivo) {
     const grafoCompleto = buildMultiGrafo({ redesInfo, arestasConexao });
     console.log('\n=== Resultados do Grafo Completo ===');
     exibirGrafo(grafoCompleto);
+
+    salvarSimulacaoJSON(grafoCompleto, {
+        tipoSimulacao: 'multi-rede-completa',
+        arquivoOrigem: pathArquivo
+    });
 }
 
 export function carregarGrafo(pathArquivo) {
@@ -38,6 +50,11 @@ export function carregarGrafo(pathArquivo) {
     const grafo = buildGrafoFromText(content);
 
     exibirGrafo(grafo);
+
+    salvarSimulacaoJSON(grafo, {
+        tipoSimulacao: 'mono',
+        arquivoOrigem: pathArquivo
+    });
 
     // retorna o grafo para que menus possam editar/exibir novamente
     return grafo;
